@@ -16,6 +16,7 @@ import { Toast } from "@/components/common/Notice";
 import { FONT, useTheme } from "@/components/loyalty/cashier/ui";
 import { getInboxHeaderBg, type InboxRowTheme } from "@/constants/inboxDesign";
 import { namePreview } from "@/utils/chatbox_utils";
+import { mediaUrl } from "@/utils/cdn";
 
 type Choice = "automatic" | AvailabilityStatus;
 
@@ -234,7 +235,7 @@ export function HeaderStatusButton() {
         >
           {user?.profilePhoto ? (
             <Image
-              source={{ uri: `${process.env.EXPO_PUBLIC_AWS_CLOUDFRONT_URL}${user.profilePhoto}` }}
+              source={{ uri: mediaUrl(user.profilePhoto) }}
               style={{ width: size, height: size }}
             />
           ) : (

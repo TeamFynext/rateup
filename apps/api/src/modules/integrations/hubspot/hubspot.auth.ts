@@ -9,7 +9,7 @@ import { readHubSpotCredential, type HubSpotCredential } from "./hubspot.types.j
  * HubSpot developer account; read from the environment directly because
  * `config.ts` drags auth and services into everything the registry imports.
  *
- * `HUBSPOT_CLIENT_*` rather than the `HUB_SPOT_*` RateUp's own CRM sync uses:
+ * `HUBSPOT_CLIENT_*` rather than the `HUBSPOT_PRIVATE_APP_ACCESS_TOKEN` RateUp's own CRM sync uses:
  * the two are different HubSpot accounts and must never be confused.
  */
 export const hubSpotOAuthConfig: OAuth2Config = {

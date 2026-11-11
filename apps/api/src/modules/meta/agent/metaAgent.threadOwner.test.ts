@@ -22,7 +22,7 @@ const OUR_APP = "our-app-id";
 
 beforeEach(() => {
   vi.clearAllMocks();
-  vi.stubEnv("waclient_id", OUR_APP);
+  vi.stubEnv("META_APP_ID", OUR_APP);
 });
 afterEach(() => vi.unstubAllEnvs());
 

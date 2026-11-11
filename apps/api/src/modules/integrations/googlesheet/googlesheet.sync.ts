@@ -175,7 +175,7 @@ export async function syncResponseToGoogleSheet(surveyId: string, orgId: string)
                   ([key, value]) =>
                     (resObj[(qstnTitle + ":" + key).trim()] =
                       key == "photo"
-                        ? `https://${process.env.AWS_CLOUDFRONT_DOMAIN}/${value}`
+                        ? `https://${process.env.MEDIA_CDN_DOMAIN}/${value}`
                         : toCell(value)),
                 );
               else if (q.type === QuestionType.MCQGrid)

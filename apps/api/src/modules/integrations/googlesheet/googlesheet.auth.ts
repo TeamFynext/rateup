@@ -11,10 +11,10 @@ export const googleSheetOAuthConfig: OAuth2Config = {
   authorizeUrl: "https://accounts.google.com/o/oauth2/v2/auth",
   tokenUrl: "https://oauth2.googleapis.com/token",
   get clientId() {
-    return process.env.GOOGLE_OAUTH_CLIENT_ID;
+    return process.env.GOOGLE_SHEETS_CLIENT_ID;
   },
   get clientSecret() {
-    return process.env.GOOGLE_OAUTH_CLIENT_SECRET;
+    return process.env.GOOGLE_SHEETS_CLIENT_SECRET;
   },
   tokenAuth: "form",
 };

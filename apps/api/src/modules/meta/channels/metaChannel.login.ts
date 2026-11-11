@@ -32,7 +32,7 @@ function loginKey(orgId: string, platform: MetaChannelPlatform, loginId: string)
  */
 export async function exchangeLoginCode(code: string): Promise<string> {
   const res = await callMetaApi(
-    `/oauth/access_token?client_id=${process.env.waclient_id}&client_secret=${process.env.waclient_secret}&code=${encodeURIComponent(code)}&redirect_uri=`,
+    `/oauth/access_token?client_id=${process.env.META_APP_ID}&client_secret=${process.env.META_APP_SECRET}&code=${encodeURIComponent(code)}&redirect_uri=`,
     "GET",
   );
   const token: string | undefined = res.data?.access_token;
@@ -43,7 +43,7 @@ export async function exchangeLoginCode(code: string): Promise<string> {
 
   try {
     const longLived = await callMetaApi(
-      `/oauth/access_token?grant_type=fb_exchange_token&client_id=${process.env.waclient_id}&client_secret=${process.env.waclient_secret}&fb_exchange_token=${encodeURIComponent(token)}`,
+      `/oauth/access_token?grant_type=fb_exchange_token&client_id=${process.env.META_APP_ID}&client_secret=${process.env.META_APP_SECRET}&fb_exchange_token=${encodeURIComponent(token)}`,
       "GET",
     );
     return longLived.data?.access_token ?? token;

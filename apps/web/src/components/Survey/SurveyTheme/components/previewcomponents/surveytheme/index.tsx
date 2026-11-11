@@ -6,7 +6,7 @@ import { ResponseSubmitted } from "@/components/(public-facing)/ws/$shortId/Resp
 import GoogleReview from "@/components/Survey/TakeSurvey/GoogleReview/index.tsx";
 import { useUser } from "@/context/UserContext.tsx";
 import { PageType } from "@/types/enums.ts";
-import { surveyUploadsPath } from "@/utils/constants.ts";
+import { mediaUrl } from "@/utils/cdn";
 
 import { TakeSurveyLayoutWeb } from "../../../../../Layout/TakeSurveyLayout/TakeSurveyLayoutWeb.tsx";
 import TakeSurvey from "../../../../TakeSurvey/TakeSurveyComponent/index.tsx";
@@ -35,7 +35,7 @@ function SurveyThemeView({
   const userInfo = useUser();
   const userObj = userInfo?.user;
   const orgLogo = userObj?.orgLogo;
-  const orgLogoUrl = orgLogo ? `${surveyUploadsPath}${orgLogo}` : "";
+  const orgLogoUrl = orgLogo ? mediaUrl(orgLogo) : "";
 
   // empty if its not review page, contains surveyLanguage if its review page
   const [isReviewPage, setIsReviewPage] = useState<string>("");

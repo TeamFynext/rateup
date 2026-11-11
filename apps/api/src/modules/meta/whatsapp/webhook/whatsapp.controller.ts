@@ -59,7 +59,7 @@ interface subscribeQuery {
 }
 export function isVerifyTokenValid(
   given: unknown,
-  expected: string | undefined = process.env.wa_webhook_password,
+  expected: string | undefined = process.env.META_WEBHOOK_VERIFY_TOKEN,
 ): boolean {
   if (!expected || typeof given !== "string") return false;
   const a = Buffer.from(given);

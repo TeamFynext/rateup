@@ -3,7 +3,7 @@ import { beforeEach, describe, expect, test, vi } from "vite-plus/test";
 // AI_API_URL is built at import time, so the env var has to exist before the
 // module graph loads.
 vi.hoisted(() => {
-  process.env.CHATBOT_API_URL = "https://ai.test";
+  process.env.AI_API_URL = "https://ai.test";
 });
 
 vi.mock("axios", () => ({ default: { create: vi.fn() } }));

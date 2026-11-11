@@ -60,6 +60,7 @@ import LocaleSwitcher from "@/components/translation/LocaleSwitcher.tsx";
 import { PhoneInput } from "@/components/ui/phone-input.tsx";
 import { useUser } from "@/context/UserContext.tsx";
 import { usePermissions } from "@/hooks/usePermission.ts";
+import { mediaUrl } from "@/utils/cdn";
 import { cropImageToSquare } from "@/utils/file-upload/autoCropSquare.ts";
 import { uploadFile } from "@/utils/file-upload/upload.ts";
 
@@ -125,7 +126,7 @@ export function AccountPage() {
   const [isEditProfileDialogOpen, setIsEditProfileDialogOpen] = useState(false);
   const [file, setFile] = useState<File | null>(null);
   const [avatarSrc, setAvatarSrc] = useState(
-    `${import.meta.env.VITE_CLOUDFRONT_WEB_IMAGES_URL}/images/profile-photo.png`,
+    `${import.meta.env.VITE_WEB_IMAGES_CDN_URL}/images/profile-photo.png`,
   );
   const [orgAvatarSrc, setOrgAvatarSrc] = useState("");
   const resetRef = useRef<HTMLInputElement>(null);
@@ -159,7 +160,7 @@ export function AccountPage() {
 
       const profilePhoto = profile.profilePhoto;
       if (profilePhoto && profilePhoto !== "REMOVED_PHOTO") {
-        setAvatarSrc(`${import.meta.env.VITE_AWS_CLOUDFRONT_URL}${profilePhoto}`);
+        setAvatarSrc(mediaUrl(profilePhoto));
       }
     }
   }, [profileData]);
@@ -177,7 +178,7 @@ export function AccountPage() {
       });
 
       if (user.orgLogo && user.orgLogo !== "REMOVED_PHOTO") {
-        setOrgAvatarSrc(`${import.meta.env.VITE_AWS_CLOUDFRONT_URL}${user.orgLogo}`);
+        setOrgAvatarSrc(mediaUrl(user.orgLogo));
       }
     }
   }, [user]);

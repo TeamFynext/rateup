@@ -3,6 +3,7 @@ import { Modal, View, Pressable } from "react-native";
 import Image from "@/components/common/Image";
 import { X } from "lucide-react-native";
 import { useTheme } from "@/components/loyalty/cashier/ui";
+import { mediaUrl } from "@/utils/cdn";
 
 type ImageResponseProps = {
   info: string;
@@ -13,7 +14,7 @@ const ImageResponse = ({ info, onClose }: ImageResponseProps) => {
   const { t } = useTheme();
   const [fullscreenVisible, setFullscreenVisible] = useState(false);
 
-  const imageUrl = `${process.env.EXPO_PUBLIC_AWS_CLOUDFRONT_URL}${info}`;
+  const imageUrl = mediaUrl(info);
 
   const handleClose = () => {
     setFullscreenVisible(false);

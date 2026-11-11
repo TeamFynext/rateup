@@ -1,11 +1,12 @@
 //CONSTANTS
 import "dotenv/config";
-export const statsPage = `${process.env.FRONTEND_URL}/dashboard/settings/billing`;
-export const billingPage = `${process.env.FRONTEND_URL}/dashboard/settings/billing`;
-export const ordersPage = `${process.env.FRONTEND_URL}/dashboard/settings/billing#order-history`;
+import { trimTrailingSlash, webImageUrl } from "../url.js";
 
-export const API_URL = process.env.API_URL || "http://localhost:3001";
-export const FRONTEND_URL = process.env.FRONTEND_URL || "http://localhost:3000";
+export const API_URL = trimTrailingSlash(process.env.API_URL) || "http://localhost:3001";
+export const FRONTEND_URL = trimTrailingSlash(process.env.FRONTEND_URL) || "http://localhost:3000";
+export const statsPage = `${FRONTEND_URL}/dashboard/settings/billing`;
+export const billingPage = `${FRONTEND_URL}/dashboard/settings/billing`;
+export const ordersPage = `${FRONTEND_URL}/dashboard/settings/billing#order-history`;
 
 export const BATCH_SIZE = 30000; // Keep it below the database limit
 
@@ -21,8 +22,8 @@ export const DEFAULT_JOIN_MESSAGE_TEMPLATE = [
   },
 ];
 
-export const rateupLogo = `${process.env.NEXT_PUBLIC_CLOUDFRONT_WEB_IMAGES_URL}/images/rateup.png`;
+export const rateupLogo = webImageUrl("images/rateup.png");
 
 export function webImagesBaseUrl(): string {
-  return process.env.NEXT_PUBLIC_CLOUDFRONT_WEB_IMAGES_URL?.replace(/\/+$/, "") ?? "";
+  return trimTrailingSlash(process.env.WEB_IMAGES_CDN_URL);
 }

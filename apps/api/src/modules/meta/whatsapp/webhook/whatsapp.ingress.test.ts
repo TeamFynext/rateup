@@ -52,7 +52,7 @@ function deliver(app: Awaited<ReturnType<typeof server>>, body: string, signatur
 
 beforeEach(() => {
   vi.clearAllMocks();
-  process.env.waclient_secret = APP_SECRET;
+  process.env.META_APP_SECRET = APP_SECRET;
   isKafkaProducerConnected.mockReturnValue(true);
   send.mockResolvedValue([]);
 });

@@ -17,20 +17,13 @@ describe("parseKafkaBrokers", () => {
     ]);
   });
 
-  it("prefers KAFKA_BROKERS over KAFKA_URL", () => {
-    expect(parseKafkaBrokers({ KAFKA_BROKERS: "a:9092", KAFKA_URL: "old:9092" })).toEqual([
-      "a:9092",
-    ]);
+  it("takes a single broker", () => {
+    expect(parseKafkaBrokers({ KAFKA_BROKERS: "localhost:9092" })).toEqual(["localhost:9092"]);
   });
 
-  it("falls back to the single-broker KAFKA_URL", () => {
-    expect(parseKafkaBrokers({ KAFKA_URL: "old:9092" })).toEqual(["old:9092"]);
-    expect(parseKafkaBrokers({ KAFKA_BROKERS: "  ", KAFKA_URL: "old:9092" })).toEqual(["old:9092"]);
-  });
-
-  it("throws when neither is set", () => {
+  it("throws when it is unset or empty", () => {
     expect(() => parseKafkaBrokers({})).toThrow(/KAFKA_BROKERS/);
-    expect(() => parseKafkaBrokers({ KAFKA_URL: " , " })).toThrow(/KAFKA_BROKERS/);
+    expect(() => parseKafkaBrokers({ KAFKA_BROKERS: " , " })).toThrow(/KAFKA_BROKERS/);
   });
 });
 
@@ -52,8 +45,11 @@ describe("kafkaProducerConfig", () => {
   });
 
   it("can be turned off", () => {
-    expect(kafkaProducerConfig({ KAFKA_IDEMPOTENT: "0" }).idempotent).toBeUndefined();
     expect(kafkaProducerConfig({ KAFKA_IDEMPOTENT: "false" }).idempotent).toBeUndefined();
+  });
+
+  it("stays on for a value that is not true or false", () => {
+    expect(kafkaProducerConfig({ KAFKA_IDEMPOTENT: "0" }).idempotent).toBe(true);
   });
 });
 

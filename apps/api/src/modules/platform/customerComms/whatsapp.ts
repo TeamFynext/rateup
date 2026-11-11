@@ -6,7 +6,7 @@ import { log } from "../../../utils/logger.js";
 
 /** RateUp's own org on the platform: sends customer comms and receives the replies. */
 export function senderOrgId(): string | undefined {
-  return process.env.ROOT_ORG || undefined;
+  return process.env.ROOT_ORG_ID || undefined;
 }
 
 /** The quick-reply payload the "Stop updates" button is sent with. */
@@ -32,7 +32,7 @@ interface TemplateComponent {
  */
 export async function sendCustomerWhatsapp(to: string, templateName: string, vars: string[]) {
   const orgId = senderOrgId();
-  if (!orgId) throw new Error("ROOT_ORG is not set");
+  if (!orgId) throw new Error("ROOT_ORG_ID is not set");
   // Loaded on send: the inbox module opens Redis subscribers at import, and the staff API
   // (which imports this file for test sends) should not pay for that at boot.
   const [{ sendMessage }, { createTemplateMessage }] = await Promise.all([

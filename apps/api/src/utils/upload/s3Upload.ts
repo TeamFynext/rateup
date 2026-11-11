@@ -9,14 +9,15 @@ import { Upload } from "@aws-sdk/lib-storage";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 
 import { log } from "../logger.js";
+import { mediaUrl, webImageUrl } from "../url.js";
 
 export const s3 =
-  process.env.AWS_S3_ACCESS_KEY_ID && process.env.AWS_S3_SECRET_KEY
+  process.env.AWS_S3_ACCESS_KEY_ID && process.env.AWS_S3_SECRET_ACCESS_KEY
     ? new S3Client({
         region: process.env.AWS_S3_REGION,
         credentials: {
           accessKeyId: process.env.AWS_S3_ACCESS_KEY_ID,
-          secretAccessKey: process.env.AWS_S3_SECRET_KEY,
+          secretAccessKey: process.env.AWS_S3_SECRET_ACCESS_KEY,
         },
       })
     : new S3Client({ region: process.env.AWS_S3_REGION });
@@ -57,17 +58,8 @@ export const getAWSObject = async (key: string) => {
   }
 };
 
-export const getFileUrlFromKey = (key: string, s3Upload = true) => {
-  if (s3Upload) {
-    const baseUrl = process.env.NEXT_PUBLIC_AWS_CLOUDFRONT_URL?.replace(/\/+$/, "") || "";
-    const cleanKey = key.replace(/^\/+/, ""); // remove leading slashes
-    return `${baseUrl}/${cleanKey}`;
-  }
-
-  const fallbackBase = process.env.NEXT_PUBLIC_CLOUDFRONT_WEB_IMAGES_URL?.replace(/\/+$/, "") || "";
-  const fallbackKey = key.replace(/^\/+/, "");
-  return `${fallbackBase}/${fallbackKey}`;
-};
+export const getFileUrlFromKey = (key: string, s3Upload = true) =>
+  s3Upload ? mediaUrl(key) : webImageUrl(key);
 
 /**
  * Bucket for files that must never have a public URL (invoices with customer addresses), one

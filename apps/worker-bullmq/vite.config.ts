@@ -36,7 +36,7 @@ export default defineConfig({
       // care about the signature set their own value.
       FLOW_TOKEN_SECRET: "test-flow-token-secret",
       // Every /api route must declare config.access or config.permission (src/authz/registry.ts).
-      AUTHZ_STRICT: "1",
+      AUTHZ_STRICT: "true",
       REDIS_URL: testRedisUrl(),
     },
   },

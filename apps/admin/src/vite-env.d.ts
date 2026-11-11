@@ -8,7 +8,7 @@ interface ImportMetaEnv {
   /** Dev only: skip the staff API and sign in as a fake staff user. Ignored in production builds. */
   readonly VITE_STAFF_MOCK?: string;
   /** The Workspace domain staff sign in with; only used for the hint in the add dialog. */
-  readonly VITE_STAFF_DOMAIN?: string;
+  readonly VITE_STAFF_GOOGLE_HD?: string;
 }
 
 interface ImportMeta {

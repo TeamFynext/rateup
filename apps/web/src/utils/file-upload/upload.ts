@@ -1,7 +1,9 @@
+import { joinUrl } from "@rateup/utils/url";
 import { toast } from "sonner";
 
 import { axiosClient } from "@/backend/apiClient";
 import type { RequestPayload } from "@/types/api.ts";
+import { mediaUrl, unsplashImageUrl, webImageUrl } from "@/utils/cdn";
 
 import { getApiErrorData, getApiErrorMessage } from "../apiError.ts";
 import { fallbackImage } from "../constants.ts";
@@ -79,16 +81,11 @@ export const deleteUploadedFiles = async (data: RequestPayload) => {
 };
 export const getFileUrlFromKey = (key: string, s3Upload = true, unsplashImage = false) => {
   if (!key) return;
-  if (unsplashImage)
-    return key?.startsWith("https") ? key : `${import.meta.env.VITE_UNSPLASH_URL}${key}`;
+  if (unsplashImage) return key?.startsWith("https") ? key : unsplashImageUrl(key);
 
-  const imgUrl = s3Upload
-    ? `${import.meta.env.VITE_AWS_CLOUDFRONT_URL}${key}`
-    : `${import.meta.env.VITE_CLOUDFRONT_WEB_IMAGES_URL}${key}`;
+  const imgUrl = s3Upload ? mediaUrl(key) : webImageUrl(key);
   return imgUrl;
 };
-const joinUrl = (base: string, path: string) =>
-  `${base.replace(/\/$/, "")}/${path.replace(/^\//, "")}`;
 
 type AssetProvider = "s3" | "web" | "unsplash";
 
@@ -98,9 +95,9 @@ export const resolveAssetUrl = (key?: string, provider: AssetProvider = "s3"): s
   if (key.startsWith("http")) return key;
 
   const providers = {
-    s3: import.meta.env.VITE_AWS_CLOUDFRONT_URL,
-    web: import.meta.env.VITE_CLOUDFRONT_WEB_IMAGES_URL,
-    unsplash: import.meta.env.VITE_UNSPLASH_URL,
+    s3: import.meta.env.VITE_MEDIA_CDN_URL,
+    web: import.meta.env.VITE_WEB_IMAGES_CDN_URL,
+    unsplash: import.meta.env.VITE_UNSPLASH_IMAGES_URL,
   };
 
   return joinUrl(providers[provider], key);
@@ -129,7 +126,7 @@ export const getImageValue = (
   if (image && typeof image === "object") {
     return URL.createObjectURL(image);
   } else if (unsplashImage) {
-    return image?.startsWith("http") ? image : `${import.meta.env.VITE_UNSPLASH_URL}${image}`;
+    return image?.startsWith("http") ? image : unsplashImageUrl(image);
   } else if (fallback || (image && image.startsWith("blob:"))) {
     return image;
   } else if (image) {
@@ -149,7 +146,7 @@ export const getLabel = (data: File | string, label: string) => {
 export async function uploadToCdn(file: File | Blob): Promise<string | null> {
   try {
     const key = await uploadFile(file);
-    return `${import.meta.env.VITE_AWS_CLOUDFRONT_URL}${key}`;
+    return mediaUrl(key);
   } catch {
     return null;
   }

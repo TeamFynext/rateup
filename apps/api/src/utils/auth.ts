@@ -113,7 +113,7 @@ export function getVerifySubscriptionHandler(featurePathNames: Array<Subscriptio
 }
 
 export function isRootOrg(request: FastifyRequest): boolean {
-  return Boolean(request.user?.orgId) && request.user.orgId === process.env.ROOT_ORG;
+  return Boolean(request.user?.orgId) && request.user.orgId === process.env.ROOT_ORG_ID;
 }
 
 export function assertRootOrg(request: FastifyRequest, reply: FastifyReply, done: () => void) {

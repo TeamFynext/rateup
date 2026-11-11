@@ -110,7 +110,7 @@ export async function registerPlugins(server: FastifyInstance) {
     process.env.FRONTEND_URL,
     process.env.STAFF_CONSOLE_ORIGIN?.replace(/\/+$/, ""),
   ].filter((origin): origin is string => !!origin);
-  allowedOrigins.push(...parseCorsWhitelist(process.env.CORS_WHITELIST));
+  allowedOrigins.push(...parseCorsWhitelist(process.env.CORS_ALLOWED_ORIGINS));
 
   await server.register(cors, {
     origin: allowedOrigins,
@@ -136,6 +136,6 @@ export async function registerPlugins(server: FastifyInstance) {
   // replicas without every replica firing the same cron tick N times.
 
   // The OpenAPI spec is always generated and served as JSON; the browsable UI is what
-  // SWAGGER=1 gates. See `plugins/swagger.ts`.
+  // API_DOCS_ENABLED=true gates. See `plugins/swagger.ts`.
   await registerSwagger(server);
 }

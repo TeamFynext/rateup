@@ -5,6 +5,6 @@
 export function storeLogoUrl(logo: string | null | undefined): string | null {
   if (!logo) return null;
   if (/^https?:\/\//i.test(logo)) return logo;
-  const domain = process.env.AWS_CLOUDFRONT_DOMAIN;
+  const domain = process.env.MEDIA_CDN_DOMAIN;
   return domain ? `https://${domain}/${logo.replace(/^\//, "")}` : null;
 }

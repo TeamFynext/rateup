@@ -13,6 +13,7 @@ import type { NewPendingMessage } from "@/store/pendingMessages.ts";
 import { WaTemplateComponentType } from "@/types/enums.ts";
 import { WaTemplateSupportedParameters } from "@/types/enums.ts";
 import type { WaTemplateComponent, WaTemplateFetchBody } from "@/types/global";
+import { mediaUrl } from "@/utils/cdn";
 import { uploadFile } from "@/utils/file-upload/upload.ts";
 import { validateInboxTemplateSending } from "@/utils/whatsapp/inbox.ts";
 
@@ -88,7 +89,7 @@ export function WaInboxTemplatePreviewNew(props: Props) {
                   ...param,
                   [mediaType]: {
                     ...param[mediaType],
-                    link: `${import.meta.env.VITE_AWS_CLOUDFRONT_URL}${fileKey}`,
+                    link: mediaUrl(fileKey),
                     ...(isDocument && { filename }),
                   },
                 }

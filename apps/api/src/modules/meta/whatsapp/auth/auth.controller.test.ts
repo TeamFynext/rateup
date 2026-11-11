@@ -117,15 +117,15 @@ function makeRequest(overrides: Record<string, unknown> = {}) {
 
 const originalEnv = {
   FRONTEND_URL: process.env.FRONTEND_URL,
-  wa_user_redirect_uri: process.env.wa_user_redirect_uri,
-  wa_app_id: process.env.wa_app_id,
+  META_OAUTH_REDIRECT_PATH: process.env.META_OAUTH_REDIRECT_PATH,
+  META_APP_ID: process.env.META_APP_ID,
 };
 
 beforeEach(() => {
   vi.clearAllMocks();
   process.env.FRONTEND_URL = "https://app.rateup.app";
-  process.env.wa_user_redirect_uri = "wa-callback";
-  process.env.wa_app_id = "app-123";
+  process.env.META_OAUTH_REDIRECT_PATH = "wa-callback";
+  process.env.META_APP_ID = "app-123";
 
   // clearAllMocks resets call history but keeps implementations, so every mock a test
   // makes reject has to be given its happy-path value back here.

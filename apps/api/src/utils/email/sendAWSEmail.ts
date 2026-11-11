@@ -2,18 +2,19 @@ import { log } from "../logger.js";
 
 import nodemailer from "nodemailer";
 import { SESv2Client, SendEmailCommand } from "@aws-sdk/client-sesv2";
+import { envFlag } from "../envFlag.js";
 
 // 1. Configure the AWS SDK client (uses default credential chain if omitted)
 const sesClient =
-  process.env.AWS_ACCESS_KEY_ID && process.env.AWS_SECRET_KEY
+  process.env.AWS_SES_ACCESS_KEY_ID && process.env.AWS_SES_SECRET_ACCESS_KEY
     ? new SESv2Client({
-        region: process.env.AWS_REGION,
+        region: process.env.AWS_SES_REGION,
         credentials: {
-          accessKeyId: process.env.AWS_ACCESS_KEY_ID,
-          secretAccessKey: process.env.AWS_SECRET_KEY,
+          accessKeyId: process.env.AWS_SES_ACCESS_KEY_ID,
+          secretAccessKey: process.env.AWS_SES_SECRET_ACCESS_KEY,
         },
       })
-    : new SESv2Client({ region: process.env.AWS_REGION });
+    : new SESv2Client({ region: process.env.AWS_SES_REGION });
 
 // 2. Create a Nodemailer transport that points at SES
 const transporter = nodemailer.createTransport({
@@ -46,7 +47,7 @@ export interface EmailParams {
  *
  * In-app and push notifications are unaffected: only the SES call is skipped.
  */
-const emailDisabled = () => process.env.DISABLE_EMAIL === "true";
+const emailDisabled = () => envFlag("EMAIL_DISABLED");
 
 export const sendAWSEmail = async (emailParams: EmailParams): Promise<boolean> => {
   const { to, subject, text, html, attachments, replyTo, headers } = emailParams;
@@ -54,7 +55,7 @@ export const sendAWSEmail = async (emailParams: EmailParams): Promise<boolean> =
   if (emailDisabled()) {
     // True, not false: the caller reads false as "SES rejected it" and throws to
     // make BullMQ retry, which would turn every suppressed email into three.
-    log.info({ to, subject }, "DISABLE_EMAIL is set — email suppressed, not sent");
+    log.info({ to, subject }, "EMAIL_DISABLED is set — email suppressed, not sent");
     return true;
   }
 

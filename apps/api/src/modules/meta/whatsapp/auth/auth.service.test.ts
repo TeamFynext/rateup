@@ -32,14 +32,14 @@ function lastCall() {
 }
 
 const originalEnv = {
-  waclient_id: process.env.waclient_id,
-  waclient_secret: process.env.waclient_secret,
+  META_APP_ID: process.env.META_APP_ID,
+  META_APP_SECRET: process.env.META_APP_SECRET,
 };
 
 beforeEach(() => {
   vi.clearAllMocks();
-  process.env.waclient_id = "app-123";
-  process.env.waclient_secret = "secret-456";
+  process.env.META_APP_ID = "app-123";
+  process.env.META_APP_SECRET = "secret-456";
   callMetaApiMock.mockResolvedValue({ data: {} });
 });
 

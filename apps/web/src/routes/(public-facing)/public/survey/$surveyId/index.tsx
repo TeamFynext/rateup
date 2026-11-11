@@ -1,6 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 
 import { FormClosed } from "@/components/(public-facing)/ws/$shortId/FormClosed.tsx";
+import { mediaUrl } from "@/utils/cdn";
 import { rateupLogoOg } from "@/utils/constants.ts";
 
 import PublicSurvey from "../../../../../components/(public-facing)/public/survey/$surveyId/publicSurveyC.tsx";
@@ -47,9 +48,7 @@ export const Route = createFileRoute("/(public-facing)/public/survey/$surveyId/"
 
     const surveyTitle = survey.title ?? "Survey";
     const surveyId = survey.id ?? params.surveyId;
-    const ogImage = survey.orgLogo
-      ? `${import.meta.env.VITE_AWS_CLOUDFRONT_URL}${survey.orgLogo}`
-      : DEFAULT_OG_IMAGE;
+    const ogImage = survey.orgLogo ? mediaUrl(survey.orgLogo) : DEFAULT_OG_IMAGE;
     const surveyDescription = `Take the ${surveyTitle} survey on Rateup.`;
 
     return {

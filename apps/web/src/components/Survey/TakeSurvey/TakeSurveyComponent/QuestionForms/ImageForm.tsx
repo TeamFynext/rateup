@@ -8,6 +8,7 @@ import { useTranslation } from "react-i18next";
 import { CurrentResponsesContext } from "@/context/ResponseContext.ts";
 import { useSurveyContext } from "@/context/SurveyObjContext.tsx";
 import { useSurveyThemeData } from "@/context/SurveyThemeContext.tsx";
+import { mediaUrl } from "@/utils/cdn";
 import { uploadFile } from "@/utils/file-upload/upload.ts";
 import { asAnswerText } from "@/utils/response.ts";
 
@@ -105,10 +106,7 @@ export function ImageForm({ isPreview }: { isPreview?: boolean }) {
                 </div>
               )}
               <img
-                src={
-                  previewUrl ||
-                  `${import.meta.env.VITE_AWS_CLOUDFRONT_URL}${asAnswerText(response)}`
-                }
+                src={previewUrl || mediaUrl(asAnswerText(response))}
                 alt="Preview"
                 className="size-full object-contain"
               />

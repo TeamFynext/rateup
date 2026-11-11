@@ -58,6 +58,7 @@ import {
   primaryIdentitySql,
   type PrimaryIdentityRow,
 } from "../../contacts/identity/contactFields.js";
+import { mediaUrl } from "../../../utils/url.js";
 
 dayjs.extend(utc);
 dayjs.extend(timezone);
@@ -296,7 +297,7 @@ export async function downloadExcelResponse(
           switch (responseType) {
             case QuestionType.Photo:
             case QuestionType.File: {
-              responseValue = `${process.env.NEXT_PUBLIC_AWS_CLOUDFRONT_URL}${responseValue}`;
+              responseValue = mediaUrl(toCell(responseValue));
               break;
             }
             case QuestionType.Date: {
@@ -385,9 +386,7 @@ export async function downloadExcelResponse(
                   const subAnswer = answerField(responseValue, key);
                   if (subAnswer) {
                     bodyArray[answerIndex].push(
-                      key === "photo"
-                        ? `${process.env.NEXT_PUBLIC_AWS_CLOUDFRONT_URL}${toCell(subAnswer)}`
-                        : toCell(subAnswer),
+                      key === "photo" ? mediaUrl(toCell(subAnswer)) : toCell(subAnswer),
                     );
                   } else {
                     bodyArray[answerIndex].push("");
@@ -945,7 +944,7 @@ export function getFormattedResponse(response: unknown, qstn: Question, language
       break;
     case QuestionType.Photo:
     case QuestionType.File:
-      formattedResponse = `https://${process.env.AWS_CLOUDFRONT_DOMAIN}/${toCell(response)}`;
+      formattedResponse = `https://${process.env.MEDIA_CDN_DOMAIN}/${toCell(response)}`;
       break;
     case QuestionType.PCQ:
       formattedResponse = toCell(answerField(answerField(response, "value"), "value"));
@@ -1250,7 +1249,7 @@ export const getCellData = (
       );
     case WaQuestions.DocumentPicker:
     case WaQuestions.PhotoPicker:
-      return response ? `${process.env.NEXT_PUBLIC_AWS_CLOUDFRONT_URL}${answer}` : "";
+      return response ? mediaUrl(answer) : "";
     case WaQuestions.DatePicker:
       return response ? dayjs(response as string | number | Date).format("DD-MM-YYYY") : "";
     default:

@@ -10,7 +10,7 @@ import {
 import type { bodySchema, paramsSchema } from "./shareSettings.schema.js";
 import type z from "zod";
 
-const cloudFrontDomain = process.env.AWS_CLOUDFRONT_DOMAIN;
+const cloudFrontDomain = process.env.MEDIA_CDN_DOMAIN;
 
 type ShareSettingsRequest = FastifyRequest<{
   Params: z.infer<typeof paramsSchema>;
@@ -67,7 +67,7 @@ const updateSettings = async (req: ShareSettingsRequest, _res: FastifyReply) => 
   ))!;
   const updatedSettings = toStoredShareSettings(updatedStoredSettings);
   if (updatedSettings?.logoFile) {
-    updatedSettings.logoFile = `https://${process.env.AWS_CLOUDFRONT_DOMAIN}/${updatedSettings.logoFile}`;
+    updatedSettings.logoFile = `https://${process.env.MEDIA_CDN_DOMAIN}/${updatedSettings.logoFile}`;
   }
 
   return updatedSettings;

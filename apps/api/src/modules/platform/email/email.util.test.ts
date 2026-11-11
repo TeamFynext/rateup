@@ -3,7 +3,7 @@ import { beforeEach, describe, expect, test, vi } from "vite-plus/test";
 // constants.ts builds the CDN urls from env at import time, so the value has to
 // be in place before the module graph loads.
 vi.hoisted(() => {
-  process.env.NEXT_PUBLIC_CLOUDFRONT_WEB_IMAGES_URL = "https://cdn.test.example";
+  process.env.WEB_IMAGES_CDN_URL = "https://cdn.test.example";
 });
 
 import crypto from "node:crypto";

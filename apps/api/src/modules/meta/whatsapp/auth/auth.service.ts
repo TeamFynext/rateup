@@ -6,8 +6,8 @@ import { callMetaApi } from "../wa_axios.js";
  * */
 export async function getAccessTokenFromCode(code: string, redirect_uri: string = "") {
   let url = `/oauth/access_token`;
-  url = url + `?client_id=${process.env.waclient_id}`;
-  url = url + `&client_secret=${process.env.waclient_secret}`;
+  url = url + `?client_id=${process.env.META_APP_ID}`;
+  url = url + `&client_secret=${process.env.META_APP_SECRET}`;
   url = url + `&code=${code}`;
   url = url + `&redirect_uri=${redirect_uri}`;
   const res = await callMetaApi(url, "GET");

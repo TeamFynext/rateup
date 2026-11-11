@@ -14,7 +14,7 @@ export default function NothingFound({ className, text }: Readonly<NothingFoundP
       className={`flex h-full flex-1 flex-col items-center justify-center gap-4 p-6 text-center ${className ?? ""}`}
     >
       <Image
-        src={`${import.meta.env.VITE_CLOUDFRONT_WEB_IMAGES_URL}/images/nodata.svg`}
+        src={`${import.meta.env.VITE_WEB_IMAGES_CDN_URL}/images/nodata.svg`}
         alt={translations("Nothing found")}
         width={140}
         height={140}

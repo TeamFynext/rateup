@@ -2,13 +2,10 @@ import axios from "axios";
 import { FastifyRequest } from "fastify";
 import { createJWT } from "../../../utils/jwt.js";
 import { log } from "../../../utils/logger.js";
+import { trimTrailingSlash } from "../../../utils/url.js";
 
-/**
- * Survey response summaries are produced by the external AI service at
- * CHATBOT_API_URL (the name predates the removal of the knowledge-base chatbot,
- * which was that service's other client).
- */
-export const AI_API_URL = `${process.env.CHATBOT_API_URL}/api`;
+/** Survey response summaries come from the external AI service at `AI_API_URL`. */
+export const AI_API_URL = `${trimTrailingSlash(process.env.AI_API_URL)}/api`;
 
 export async function getAxiosAIClient(request: FastifyRequest) {
   const jwtToken = await createJWT(request.user);

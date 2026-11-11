@@ -1,6 +1,7 @@
 import type { FastifyInstance, RouteOptions } from "fastify";
 import { log } from "../utils/logger.js";
 import type { Permission } from "./permissions.js";
+import { envFlag } from "../utils/envFlag.js";
 
 /**
  * Default-deny route registry. Every route under /api must say who may reach it, through
@@ -11,7 +12,7 @@ import type { Permission } from "./permissions.js";
  * module's own `declareAccess` hook fills in its default after the root hook has seen the
  * route. Prefix rules cover the trees whose contract is fixed (public, health, the
  * external token API) and the older `config.isPublic` flag. Until every module declares,
- * an undeclared route is only logged; with AUTHZ_STRICT=1 (set in vitest) it refuses to boot.
+ * an undeclared route is only logged; with AUTHZ_STRICT=true (set in vitest) it refuses to boot.
  */
 export function describeRoute(route: Pick<RouteOptions, "method" | "url">): string {
   const method = Array.isArray(route.method) ? route.method.join("|") : route.method;
@@ -19,7 +20,7 @@ export function describeRoute(route: Pick<RouteOptions, "method" | "url">): stri
 }
 
 export function isStrict(): boolean {
-  return process.env.AUTHZ_STRICT === "1";
+  return envFlag("AUTHZ_STRICT");
 }
 
 export function classifyRoute(route: RouteOptions): "declared" | "tagged" | "undeclared" {

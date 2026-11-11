@@ -28,7 +28,7 @@ export const DB_TRANSACTION_TIMEOUT_MS = Number.parseInt(
 /**
  * Raw `pg` pool, used by the campaign dispatch path only.
  *
- * That path runs at `WA_MESSAGE_CONCURRENCY` (see `waMessage.processor.ts`) and
+ * That path runs at `CAMPAIGN_SEND_CONCURRENCY` (see `waMessage.processor.ts`) and
  * a failed send ends in a short read-modify-write transaction. Prisma's interactive
  * `$transaction` gives up waiting for a free connection after a few seconds and
  * throws P2028, so under a real campaign every send's bookkeeping failed. A

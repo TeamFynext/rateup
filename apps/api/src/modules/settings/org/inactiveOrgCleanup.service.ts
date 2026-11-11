@@ -30,7 +30,7 @@ const DAY_MS = 24 * 60 * 60 * 1000;
  * is still in use (an integration can run for years without anyone signing in).
  */
 function protectedOrgFilter(now: Date, cutoff: Date): Prisma.OrgWhereInput {
-  const rootOrg = process.env.ROOT_ORG || undefined;
+  const rootOrg = process.env.ROOT_ORG_ID || undefined;
   return {
     ...(rootOrg ? { id: { not: rootOrg } } : {}),
     suspendedAt: null,

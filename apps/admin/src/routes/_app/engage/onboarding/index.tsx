@@ -207,7 +207,7 @@ function OnboardingPage() {
         <>
           {!query.data.whatsappSender && (
             <Notice>
-              WhatsApp steps are off: ROOT_ORG is not set on the API, so only email goes out.
+              WhatsApp steps are off: ROOT_ORG_ID is not set on the API, so only email goes out.
             </Notice>
           )}
           <div className="grid grid-cols-2 gap-4 lg:grid-cols-3 lg:gap-5">

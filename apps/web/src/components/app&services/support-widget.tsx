@@ -234,7 +234,7 @@ function messageTime(message: Message) {
 }
 
 export default function SupportWidget({
-  whatsappNumber = import.meta.env.VITE_SUPPORT_WHATSAPP,
+  whatsappNumber = import.meta.env.VITE_SUPPORT_WHATSAPP_NUMBER,
   companyName = "Team RateUp",
   token,
   backendUrl,

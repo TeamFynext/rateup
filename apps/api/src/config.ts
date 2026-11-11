@@ -24,21 +24,22 @@ import { getUserInfo } from "./utils/supertoken/supertoken.js";
 import { captchaPlugins } from "./utils/supertoken/captcha.js";
 import { jsonSchemaTransform } from "fastify-type-provider-zod";
 import { errorMessage } from "./utils/commonUtils.js";
+import { trimTrailingSlash } from "./utils/url.js";
+import { envFlag } from "./utils/envFlag.js";
 
 // Environment configuration
 export const appConfig = {
-  frontendUrl: process.env.FRONTEND_URL || "http://localhost:3000",
-  backendUrl: process.env.API_URL || "http://localhost:3001",
+  frontendUrl: trimTrailingSlash(process.env.FRONTEND_URL) || "http://localhost:3000",
+  backendUrl: trimTrailingSlash(process.env.API_URL) || "http://localhost:3001",
   port: Number.parseInt(process.env.PORT || "3001", 10),
   host: process.env.HOST || "::",
   nodeEnv: process.env.NODE_ENV || "development",
-  kafkaUrl: process.env.KAFKA_URL,
   supertokens: {
-    connectionURI: process.env.SUPERTOKEN_URI || "",
-    apiKey: process.env.SUPERTOKEN_KEY,
-    smsApiKey: process.env.SUPERTOKEN_SMS_API_KEY,
-    googleClientId: process.env.SUPERTOKEN_GOOGLE_CLIENT_ID || "",
-    googleClientSecret: process.env.SUPERTOKEN_GOOGLE_CLIENT_SECRET || "",
+    connectionURI: process.env.SUPERTOKENS_CONNECTION_URI || "",
+    apiKey: process.env.SUPERTOKENS_API_KEY,
+    smsApiKey: process.env.SUPERTOKENS_SMS_API_KEY,
+    googleClientId: process.env.SUPERTOKENS_GOOGLE_CLIENT_ID || "",
+    googleClientSecret: process.env.SUPERTOKENS_GOOGLE_CLIENT_SECRET || "",
     appleClientId: process.env.APPLE_CLIENT_ID || "",
     appleKeyId: process.env.APPLE_KEY_ID || "",
     applePrivateKey: process.env.APPLE_PRIVATE_KEY || "",
@@ -308,7 +309,7 @@ export const SuperTokensConfig: TypeInput = {
 
     Passwordless.init({
       smsDelivery: {
-        // SUPERTOKEN_SMS_API_KEY is unset in development and in the test env,
+        // SUPERTOKENS_SMS_API_KEY is unset in development and in the test env,
         // where this module is imported but no SMS is ever sent — the value is
         // passed through as-is, as it always has been.
         service: new SupertokensService(appConfig.supertokens.smsApiKey!),
@@ -320,11 +321,11 @@ export const SuperTokensConfig: TypeInput = {
           ...originalImplementation,
           createCodePOST: async function (input) {
             // Phone sign-up is a product flow today (the dashboard's /signup?auth=phone), so it
-            // stays on unless PASSWORDLESS_PHONE_SIGNUP=false: then an SMS is only ever sent
+            // stays on unless PASSWORDLESS_PHONE_SIGNUP_ENABLED=false: then an SMS is only ever sent
             // to a number that already has an account, which ends SMS pumping to arbitrary
             // numbers. The per-IP/per-number limits in plugins/index.ts apply either way.
             if (
-              process.env.PASSWORDLESS_PHONE_SIGNUP === "false" &&
+              !envFlag("PASSWORDLESS_PHONE_SIGNUP_ENABLED", true) &&
               "phoneNumber" in input &&
               input.phoneNumber
             ) {
@@ -410,7 +411,7 @@ export const SuperTokensConfig: TypeInput = {
 
     // The SuperTokens admin dashboard is an admin login surface at /api/auth/dashboard; off
     // unless explicitly enabled, and then limited to the listed admin emails.
-    ...(process.env.SUPERTOKENS_DASHBOARD === "1"
+    ...(envFlag("SUPERTOKENS_DASHBOARD_ENABLED")
       ? [
           Dashboard.init({
             admins: (process.env.SUPERTOKENS_DASHBOARD_ADMINS ?? "")

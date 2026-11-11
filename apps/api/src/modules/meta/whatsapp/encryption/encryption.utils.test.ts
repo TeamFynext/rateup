@@ -92,7 +92,7 @@ function reply() {
 
 beforeEach(() => {
   vi.clearAllMocks();
-  process.env.waclient_secret = APP_SECRET;
+  process.env.META_APP_SECRET = APP_SECRET;
   getWaSettingsMock.mockResolvedValue({
     orgId: "org-1",
     phoneId: "phone-1",
@@ -111,7 +111,7 @@ describe("isRequestSignatureValid", () => {
   // A secret pasted from a dashboard or env file often carries a newline, which
   // changes the digest and is invisible in a log line.
   test("accepts a signature made with an untrimmed secret", () => {
-    process.env.waclient_secret = `${APP_SECRET}\n`;
+    process.env.META_APP_SECRET = `${APP_SECRET}\n`;
 
     expect(isRequestSignatureValid(request({ a: 1 })).valid).toBe(true);
   });
@@ -153,7 +153,7 @@ describe("isRequestSignatureValid", () => {
   });
 
   test("rejects everything when the app secret is unset", () => {
-    delete process.env.waclient_secret;
+    delete process.env.META_APP_SECRET;
 
     expect(isRequestSignatureValid(request({ a: 1 }))).toMatchObject({
       valid: false,
@@ -224,7 +224,7 @@ describe("handleFlowResponse", () => {
 
   // WEBH-8: new rows store the key pair sealed; legacy rows (above) are plain.
   test("serves a row whose keys are stored sealed", async () => {
-    process.env.wa_access_token_encryption_key = "11".repeat(32);
+    process.env.META_ENCRYPTION_KEY = "11".repeat(32);
     getWaSettingsMock.mockResolvedValue({
       orgId: "org-1",
       phoneId: "phone-1",
@@ -241,9 +241,9 @@ describe("handleFlowResponse", () => {
   });
 
   test("a sealed row that does not open under the configured key fails, without re-keying", async () => {
-    process.env.wa_access_token_encryption_key = "11".repeat(32);
+    process.env.META_ENCRYPTION_KEY = "11".repeat(32);
     const sealed = sealFlowKeys(keys);
-    process.env.wa_access_token_encryption_key = "22".repeat(32);
+    process.env.META_ENCRYPTION_KEY = "22".repeat(32);
     getWaSettingsMock.mockResolvedValue({
       orgId: "org-1",
       phoneId: "phone-1",

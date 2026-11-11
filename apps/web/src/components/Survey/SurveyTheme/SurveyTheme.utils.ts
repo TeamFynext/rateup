@@ -1,6 +1,7 @@
 import { produce } from "immer";
 
 import type { SurveyTheme } from "@/backend/surveyTheme/surveyTheme.types";
+import { mediaUrl } from "@/utils/cdn";
 import { uploadFile } from "@/utils/file-upload/upload.ts";
 
 import type { SurveyThemePage } from "./surveyThemeReducer.ts";
@@ -49,9 +50,7 @@ export async function destructureThemeAndUploadImagesIfAny(
   const urls = await Promise.all(
     images.map((image: string | File | Blob | null | undefined) =>
       image instanceof File || image instanceof Blob
-        ? uploadFile(image).then(
-            (fileKey) => `${import.meta.env.VITE_AWS_CLOUDFRONT_URL}${fileKey}`,
-          )
+        ? uploadFile(image).then((fileKey) => mediaUrl(fileKey))
         : Promise.resolve(image),
     ),
   );

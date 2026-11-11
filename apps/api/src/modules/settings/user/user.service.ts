@@ -94,7 +94,7 @@ export async function announceSignup(a: SignupAnnouncement) {
     });
     await notificationQueue.add("notification", {
       emailData: {
-        to: process.env.ROOT_ORG_MAIL_ID ?? "hello@rateup.app",
+        to: process.env.ROOT_ORG_EMAIL ?? "hello@rateup.app",
         subject: `New RateUp SignUp: ${a.orgName}`,
         html,
         text,

@@ -62,15 +62,15 @@ cp tools/meta-mock/.env.example tools/meta-mock/.env  # only if you use the mock
 
 The values that matter first, in `apps/api/.env` (and the two worker copies):
 
-| Variable               | Local value                                             |
-| ---------------------- | ------------------------------------------------------- |
-| `DATABASE_URL`         | `postgresql://user:password@localhost:5432/rateup`      |
-| `REDIS_URL`            | `redis://localhost:6379`                                |
-| `KAFKA_URL`            | `localhost:9092`                                        |
-| `SUPERTOKEN_URI`       | `http://localhost:3567`                                 |
-| `FRONTEND_URL`         | `http://localhost:3000`                                 |
-| `API_URL`              | `http://localhost:3001`                                 |
-| `STAFF_CONSOLE_ORIGIN` | `http://localhost:4000` (only to use the staff console) |
+| Variable                     | Local value                                             |
+| ---------------------------- | ------------------------------------------------------- |
+| `DATABASE_URL`               | `postgresql://user:password@localhost:5432/rateup`      |
+| `REDIS_URL`                  | `redis://localhost:6379`                                |
+| `KAFKA_BROKERS`              | `localhost:9092`                                        |
+| `SUPERTOKENS_CONNECTION_URI` | `http://localhost:3567`                                 |
+| `FRONTEND_URL`               | `http://localhost:3000`                                 |
+| `API_URL`                    | `http://localhost:3001`                                 |
+| `STAFF_CONSOLE_ORIGIN`       | `http://localhost:4000` (only to use the staff console) |
 
 `apps/web/.env` and `apps/admin/.env` need `VITE_API_URL=http://localhost:3001`.
 `apps/mobile/.env` needs `EXPO_PUBLIC_API_URL` set to an address your phone or emulator can
@@ -94,8 +94,8 @@ docker run -d --name rateup-postgres -p 5432:5432 \
   postgres:17
 ```
 
-Authentication needs a SuperTokens core at `SUPERTOKEN_URI`. Run one against the same
-Postgres (it keeps its own tables), or point `SUPERTOKEN_URI`/`SUPERTOKEN_KEY` at a shared
+Authentication needs a SuperTokens core at `SUPERTOKENS_CONNECTION_URI`. Run one against the same
+Postgres (it keeps its own tables), or point `SUPERTOKENS_CONNECTION_URI`/`SUPERTOKENS_API_KEY` at a shared
 development core:
 
 ```bash
@@ -246,7 +246,7 @@ Migrations deploy from CI: `.github/workflows/prisma-migrate-dev.yml` on pushes 
 - **Prisma types missing or stale:** `vp run @rateup/db#generate`.
 - **API exits at start with a Kafka or Redis error:** the containers are not running;
   `docker compose -f apps/api/docker-compose.yaml up -d`.
-- **Sign-in fails locally:** check `SUPERTOKEN_URI` points at a running SuperTokens core.
+- **Sign-in fails locally:** check `SUPERTOKENS_CONNECTION_URI` points at a running SuperTokens core.
 - **Admin cannot reach the API:** `STAFF_CONSOLE_ORIGIN=http://localhost:4000` in
   `apps/api/.env`, and the console must run on port 4000 (it does not pick another).
 - **Mobile cannot reach the API:** `EXPO_PUBLIC_API_URL` must be reachable from the device,

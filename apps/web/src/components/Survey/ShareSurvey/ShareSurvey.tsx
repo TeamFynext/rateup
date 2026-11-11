@@ -521,7 +521,7 @@ const ShareSurvey = ({
                       >
                         <img
                           alt="mail icon"
-                          src={`${import.meta.env.VITE_CLOUDFRONT_WEB_IMAGES_URL}/images/social-media-icons/mail.svg`}
+                          src={`${import.meta.env.VITE_WEB_IMAGES_CDN_URL}/images/social-media-icons/mail.svg`}
                           className="size-10 object-contain"
                           style={{ opacity: disableShare ? 0.5 : 1 }}
                         />
@@ -541,7 +541,7 @@ const ShareSurvey = ({
                       >
                         <img
                           alt="whatsapp icon"
-                          src={`${import.meta.env.VITE_CLOUDFRONT_WEB_IMAGES_URL}/images/social-media-icons/whatsapp.svg`}
+                          src={`${import.meta.env.VITE_WEB_IMAGES_CDN_URL}/images/social-media-icons/whatsapp.svg`}
                           className="size-10 object-contain"
                           style={{ opacity: disableShare ? 0.5 : 1 }}
                         />
@@ -561,7 +561,7 @@ const ShareSurvey = ({
                       >
                         <img
                           alt="facebook icon"
-                          src={`${import.meta.env.VITE_CLOUDFRONT_WEB_IMAGES_URL}/images/social-media-icons/facebook.svg`}
+                          src={`${import.meta.env.VITE_WEB_IMAGES_CDN_URL}/images/social-media-icons/facebook.svg`}
                           className="size-10 object-contain"
                           style={{ opacity: disableShare ? 0.5 : 1 }}
                         />

@@ -103,7 +103,7 @@ describe("registerAuthzRouteRegistry", () => {
   }
 
   test("in strict mode an undeclared /api route refuses to boot at ready, naming the route", async () => {
-    process.env.AUTHZ_STRICT = "1";
+    process.env.AUTHZ_STRICT = "true";
     const server = fakeServer();
     registerAuthzRouteRegistry(server as any);
     const onRoute = server.hooks.onRoute[0];
@@ -116,7 +116,7 @@ describe("registerAuthzRouteRegistry", () => {
   });
 
   test("a module default applied after the root hook saw the route still counts", async () => {
-    process.env.AUTHZ_STRICT = "1";
+    process.env.AUTHZ_STRICT = "true";
     const server = fakeServer();
     registerAuthzRouteRegistry(server as any);
     const r = route("/api/wa/settings", {}, "PUT");

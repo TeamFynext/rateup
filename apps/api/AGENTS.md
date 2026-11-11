@@ -113,7 +113,7 @@ New code goes in the group of the feature it serves. Folder and file names follo
 
 1. `src/index.ts` — entry point; sets server options (body limit, timeouts, `trustProxy`), wires `unhandledRejection`/`uncaughtException` and SIGTERM/SIGINT graceful shutdown, then `listen()`s. It is HTTP only; queue consumers and the schedule run in the worker services.
 2. `src/app.ts` — `build()` creates the Fastify instance with the Zod type provider (`validatorCompiler`/`serializerCompiler`), registers plugins, then registers routes inside `server.after()`.
-3. `src/plugins/index.ts` — `registerPlugins()` initializes, in order: SuperTokens (auth) + its Fastify plugin and error handler, the auth rate limit, CORS, WebSocket, the Kafka producer, and Swagger (only when `SWAGGER=1`). BullMQ consumers and scheduled jobs deliberately do not register here.
+3. `src/plugins/index.ts` — `registerPlugins()` initializes, in order: SuperTokens (auth) + its Fastify plugin and error handler, the auth rate limit, CORS, WebSocket, the Kafka producer, and Swagger (only when `API_DOCS_ENABLED=true`). BullMQ consumers and scheduled jobs deliberately do not register here.
 4. `src/registerRoutes.ts` — a single `routeConfigs` array maps each module's route plugin to a URL prefix. **To add a new route group, import its route plugin and add an entry here.** Public (unauthenticated) routes live under `/api/public/*`; everything else expects a session.
 5. `src/routes/legacyPaths.ts` — URLs renamed on 2026-11-10 to match the dashboard (`/api/contacts`, `/api/inbox`, `/api/automation/{rules,journeys}`, `/api/whatsapp/*`, `/api/surveys/*`, …). Installed mobile apps still call the old ones, so `rewriteUrl` in `app.ts` maps an old prefix to its new one before routing; routes exist only at the new URL. **Renaming a prefix in `registerRoutes.ts` means adding a row there.** Never rename a URL an outside service calls (Meta webhooks and flow endpoints under `/api/wa`, `/api/public/*`, `/api/external/*`, `/api/integration/external/*`). Audit log rows keep the path they were written with; `currentApiPath` reads old ones as new. `legacy_api_path_requests_total{prefix}` shows when a row is safe to delete.
 
@@ -131,7 +131,7 @@ Feature modules live in `src/modules/<domain>/` and follow a consistent file lay
 
 Every route under `/api` declares who may reach it, and the root hooks in `src/registerRoutes.ts` enforce it. There is no per-route role check to remember.
 
-1. **Declaration** — a route carries `config: { permission: "inbox.reply" }` (any one of a list also works) or `config: { access: "session" | "public" | "token" }`. A module usually declares once at the top of its plugin with `declareAccess(server, { read: "x.read", write: "x.manage" })` (`src/authz/registry.ts`); a route's own `config` wins over the module default. `/api/public/*`, `/api/health/*`, `/api/external/v1/*` and `/api/external/v2/*` are tagged by prefix. With `AUTHZ_STRICT=1` (set in vitest) an undeclared route fails boot.
+1. **Declaration** — a route carries `config: { permission: "inbox.reply" }` (any one of a list also works) or `config: { access: "session" | "public" | "token" }`. A module usually declares once at the top of its plugin with `declareAccess(server, { read: "x.read", write: "x.manage" })` (`src/authz/registry.ts`); a route's own `config` wins over the module default. `/api/public/*`, `/api/health/*`, `/api/external/v1/*` and `/api/external/v2/*` are tagged by prefix. With `AUTHZ_STRICT=true` (set in vitest) an undeclared route fails boot.
 2. **`authorize`** (`src/authz/authorize.ts`), a root `preHandler` — for a session or permission route it validates the SuperTokens session, loads the **actor** (`src/authz/actor.ts`: role key, permissions, team scope, cached in Redis for 60 s under `authz:<userId>:<orgId>`) and sets `request.actor` plus the legacy `request.user` (`role` now comes from the database, not the token). A missing permission answers `403 { reason: "permission", permission }`. `AUTHZ_AUDIT_ONLY=<module,...>` logs the refusal and lets the request through, per `/api/<module>` prefix, for a rollout soak.
 3. `getVerifySubscriptionHandler([...features])` (`src/utils/auth.ts`) — plan gate; `403 { reason: "subscription" }`. Kept separate from permissions on purpose: "upgrade" and "ask your admin" are different messages.
 4. **Scope** (`src/authz/scope.ts`, `resourceScope.ts`) — team-scoped roles see only rows whose team is in `actor.scope.teamIds`; `inScope`, `assertInScope`, `scopeWhere`, `surveyInScope`, `pipelineInScope`. Module `*.auth.ts` guards read `request.actor`, never `request.user.role`.
@@ -168,7 +168,7 @@ has the file layout and the rules.
   cannot connect, and keeps reconnecting in the background. `/api/health` stays a plain liveness
   check (Railway's deploy healthcheck); `/api/health/ready` answers 503 while Kafka is
   unreachable. Topics (`status-events`, `wa-webhooks` and their `-dlq`s) are created at boot with
-  12 partitions; brokers come from `KAFKA_BROKERS` (comma-separated) or `KAFKA_URL`. Consumers
+  12 partitions; brokers come from `KAFKA_BROKERS` (comma-separated). Consumers
   live in `apps/worker-kafka/src/consumers/`.
 
 ## Deployment Topology
@@ -237,7 +237,7 @@ Rules to keep in mind when adding code:
 
 - **Concurrency pairs with the pool.** Every process opens two `pg` pools of
   `DB_POOL_MAX` (default 10) — Prisma's adapter pool and the raw pool in
-  `src/utils/db.ts`. `WA_MESSAGE_CONCURRENCY` (default 50) is how many campaign
+  `src/utils/db.ts`. `CAMPAIGN_SEND_CONCURRENCY` (default 50) is how many campaign
   sends one bullmq process holds in flight; keep it within a small multiple of
   `DB_POOL_MAX` and raise them together. The total to budget against Postgres'
   `max_connections` (or PgBouncer's pool) is `DB_POOL_MAX × 2 × replicas` per service.

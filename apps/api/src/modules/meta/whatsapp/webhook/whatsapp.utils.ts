@@ -653,7 +653,7 @@ export const handlePaymentConfirmation = async (
   });
 
   // The order is the only thing that says which org was paid. Without it there is
-  // no org to answer from — this used to fall back to ROOT_ORG, which sent the
+  // no org to answer from — this used to fall back to ROOT_ORG_ID, which sent the
   // confirmation from RateUp's own number with RateUp's template.
   if (!order) {
     log.warn({ refrenceId }, "No catalog order for this payment; not sending a confirmation");

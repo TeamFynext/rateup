@@ -39,7 +39,7 @@ beforeEach(() => {
 });
 
 afterEach(() => {
-  delete process.env.ROOT_ORG;
+  delete process.env.ROOT_ORG_ID;
 });
 
 describe("warnInactiveOrgs", () => {
@@ -57,7 +57,7 @@ describe("warnInactiveOrgs", () => {
   });
 
   test("looks for orgs idle for a year, skipping paying, suspended and root orgs", async () => {
-    process.env.ROOT_ORG = "root-org";
+    process.env.ROOT_ORG_ID = "root-org";
     await warnInactiveOrgs(NOW);
 
     const where = db.org.findMany.mock.calls[0][0].where;

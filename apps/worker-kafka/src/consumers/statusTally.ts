@@ -22,6 +22,7 @@
 // production consumer should not be spending — hence off unless asked for, and
 // capped even then.
 import { log } from "@rateup/api/workers/shared/logger.js";
+import { envFlag } from "@rateup/api/utils/envFlag.js";
 
 /** The statuses a WhatsApp send produces, in the order it produces them. */
 const STATUSES = ["sent", "delivered", "read", "failed"] as const;
@@ -71,13 +72,11 @@ export interface StatusTallySnapshot {
  * On only where NODE_ENV says local (development or test), since the point is to be
  * running when someone fires a campaign at the mock and wants to check the arithmetic.
  * Production leaves NODE_ENV unset, so "not production" would have kept it on there.
- * `STATUS_TALLY=1` turns it on anywhere (the dev environment's mock), `STATUS_TALLY=0` off.
+ * `STATUS_TALLY_ENABLED=true` turns it on anywhere (the dev environment's mock), `STATUS_TALLY_ENABLED=false` off.
  */
 function tallyEnabled(): boolean {
-  const flag = process.env.STATUS_TALLY;
-  if (flag === "1" || flag === "true") return true;
-  if (flag === "0" || flag === "false") return false;
-  return process.env.NODE_ENV === "development" || process.env.NODE_ENV === "test";
+  const local = process.env.NODE_ENV === "development" || process.env.NODE_ENV === "test";
+  return envFlag("STATUS_TALLY_ENABLED", local);
 }
 
 const zeroed = (): Record<Status, number> => ({ sent: 0, delivered: 0, read: 0, failed: 0 });

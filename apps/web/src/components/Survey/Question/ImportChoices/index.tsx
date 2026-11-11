@@ -112,7 +112,7 @@ function ImportChoices({
               {translations("Column headings in Excel file should be the selected language key.")}
             </span>
             <a
-              href={`${import.meta.env.VITE_CLOUDFRONT_WEB_IMAGES_URL}/File/multiple-choice-questions-choices-demo.xlsx`}
+              href={`${import.meta.env.VITE_WEB_IMAGES_CDN_URL}/File/multiple-choice-questions-choices-demo.xlsx`}
               download
               className="flex w-fit items-center gap-1.5 text-xs font-medium text-primary hover:underline"
             >
