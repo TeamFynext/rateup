@@ -6,7 +6,7 @@ import {
   getAllContactsHandler,
   getContactByIdHandler,
   updateContactByIdHandler,
-} from "../../../modules/contact/contact.controller.js";
+} from "../../../modules/contacts/contact.controller.js";
 import { ExtCreateContactSchema } from "../contact-groups/contact.external.schema.js";
 import { findForeignContactRef } from "./contactRefs.js";
 

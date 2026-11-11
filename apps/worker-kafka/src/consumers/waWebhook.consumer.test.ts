@@ -4,7 +4,7 @@ vi.mock("@rateup/api/utils/logger.js", () => ({
   log: { error: vi.fn(), info: vi.fn(), trace: vi.fn(), warn: vi.fn(), debug: vi.fn() },
 }));
 const processWhatsappWebhook = vi.fn();
-vi.mock("@rateup/api/modules/whatsapp/whatsappSurvey/wasurvey.webhook.js", () => ({
+vi.mock("@rateup/api/modules/meta/whatsapp/webhook/whatsapp.webhook.js", () => ({
   processWhatsappWebhook,
 }));
 const addBulk = vi.fn();

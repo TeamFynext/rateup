@@ -11,11 +11,11 @@ vi.mock("../../../utils/db.js", () => ({
 }));
 vi.mock("../ws.publisher.js", () => ({ publisher: { publish }, WS_CHANNEL: "ws:messages" }));
 vi.mock("../../../utils/redisConnection.js", () => ({ default: { duplicate: () => ({}) } }));
-vi.mock("../../../modules/whatsapp/meta/metaMessage.service.js", () => ({
+vi.mock("../../../modules/meta/shared/metaMessage.service.js", () => ({
   sendMetaMessage: vi.fn(),
   metaErrorMessage: vi.fn(() => null),
 }));
-vi.mock("../../../modules/webhook/webhook.events.js", () => ({ emitWebhookEvents }));
+vi.mock("../../../modules/settings/webhooks/webhook.events.js", () => ({ emitWebhookEvents }));
 vi.mock("../logger.js", () => ({
   log: { info: vi.fn(), warn: vi.fn(), error: vi.fn(), debug: vi.fn(), trace: vi.fn() },
 }));

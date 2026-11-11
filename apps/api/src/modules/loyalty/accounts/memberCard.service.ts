@@ -9,6 +9,11 @@ import { sendLoyalty } from "../messaging/send.js";
 import { renderReplyText } from "../richText.js";
 import { parsePhoneforWa } from "../util.js";
 import { CARD_CODE_LENGTH, formatCardCode } from "./cardCode.js";
+import {
+  contactFields,
+  contactWhereIdentity,
+  primaryIdentities,
+} from "../../contacts/identity/contactFields.js";
 
 /**
  * The member card: a QR the customer keeps in their WhatsApp chat and shows at the
@@ -143,7 +148,7 @@ export async function sendMemberCard(input: {
   const account = await prisma.customerLoyaltyAccount.findFirst({
     where: { id: input.accountId, program: { orgId: input.orgId } },
     include: {
-      contact: { select: { name: true, phone: true } },
+      contact: { select: { name: true, ...primaryIdentities } },
       program: { select: { name: true, currencyName: true, status: true } },
     },
   });
@@ -160,7 +165,7 @@ export async function sendMemberCard(input: {
   if (!account || account.status !== "active" || account.program.status !== "active") {
     return skipped("not_active");
   }
-  if (!account.contact.phone) return skipped("not_active");
+  if (!contactFields(account.contact.identities).phone) return skipped("not_active");
 
   const cardCode = await ensureMemberCard(account.id);
   const url = cardImageUrl(cardCode);
@@ -233,7 +238,7 @@ export function renderCardReply(
 export async function sendMemberCardIfDue(phone: string, orgId: string): Promise<boolean> {
   const due = await prisma.customerLoyaltyAccount.findFirst({
     where: {
-      contact: { phone: parsePhoneforWa(phone), orgId },
+      contact: { orgId, ...contactWhereIdentity("phone", parsePhoneforWa(phone)) },
       status: "active",
       cardCode: { not: null },
       cardSentAt: null,

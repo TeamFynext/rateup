@@ -2,7 +2,7 @@ import type { RequestPayload } from "@/types/api.ts";
 
 import { axiosClient } from "../apiClient";
 
-const url = "/generateQr";
+const url = "/qr-codes";
 
 /** A dynamic QR code: a short link that redirects to `link` and counts scans. */
 export interface GeneratedQr {

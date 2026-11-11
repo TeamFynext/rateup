@@ -18,14 +18,14 @@
     {
       "label": "Frontend",
       "type": "shell",
-      "command": "vp -C apps/web dev",
+      "command": "vpr -C apps/web dev",
       "isBackground": true,
       "presentation": { "group": "frontend" }
     },
     {
       "label": "Admin",
       "type": "shell",
-      "command": "vp -C apps/admin dev",
+      "command": "vpr -C apps/admin dev",
       "isBackground": true,
       "presentation": { "group": "admin" }
     },

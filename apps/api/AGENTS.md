@@ -88,18 +88,38 @@ generated/              # Generated Prisma client
 
 ### Feature Modules
 
-Modules are organized by domain: `campaign`, `contact`, `dashboard`, `email`, `integrations`, `landingPage`, `lifecycle`, `loyalty`, `menu`, `notification`, `org`, `payment`, `question`, `referrals`, `response`, `services`, `stats`, `subscription`, `survey`, `team`, `testimonial`, `user`, `webhook`, `whatsapp`, and more.
+Modules are grouped by product feature, the same groups as the dashboard's sidebar (regrouped 2026-11-10; `git log --follow` reaches the old paths):
+
+| Folder          | Holds                                                                                                                                                                                                                                                         |
+| --------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `inbox/`        | messages, notes, quick replies, ad referrals, inbox automation, stats, `calls/`, `conversations/`, `conversationTags/`, `webchat/` (the support widget)                                                                                                       |
+| `contacts/`     | contacts, `audiences/` (contact groups), `labels/`, `identity/`, `merge/`, `handoff/`, `lifecycle/`                                                                                                                                                           |
+| `campaigns/`    | campaigns, sends, retries, participants                                                                                                                                                                                                                       |
+| `automation/`   | `rules/` (automated replies), `journeys/` (chatbots)                                                                                                                                                                                                          |
+| `meta/`         | `whatsapp/` (templates, flows, settings, auth, `webhook/`, redirect, encryption, metering), `instagram/`, `messenger/`, `channels/` (Meta login), `shared/` (send API, signatures, send window), `agent/` (Meta AI Agent); `meta.routes.ts` mounts the groups |
+| `commerce/`     | shop, `catalogs/` (WhatsApp catalogs)                                                                                                                                                                                                                         |
+| `pipelines/`    | pipelines, leads, stages                                                                                                                                                                                                                                      |
+| `loyalty/`      | the loyalty programme                                                                                                                                                                                                                                         |
+| `surveys/`      | surveys, `questions/`, `responses/`, `themes/`, `shareSettings/`, `reviewSuggestions/`, `testimonials/`                                                                                                                                                       |
+| `links/`        | `linkPages/` (link trees), `qrCodes/`                                                                                                                                                                                                                         |
+| `analytics/`    | message analytics, `stats/`, `dashboard/`                                                                                                                                                                                                                     |
+| `settings/`     | `org/`, `teams/`, `user/`, `apiKeys/`, `webhooks/`, `notifications/`, `mobileNotifications/`, `channels/`, `subscription/`, `billing/`                                                                                                                        |
+| `integrations/` | third-party integrations                                                                                                                                                                                                                                      |
+| `platform/`     | RateUp's own: `staff/`, `admin/`, `maintenance/`, `customerComms/`, `email/`, `fileUpload/`, `bookDemo/`, `contactForm/`, `referrals/`, `services/`, `unsplash/`                                                                                              |
+
+New code goes in the group of the feature it serves. Folder and file names follow the product name (journeys, audiences, rules); some exported symbols keep the older names (`chatbotRoutes`, `contactGroupRoutes`).
 
 ## App bootstrap flow
 
 1. `src/index.ts` — entry point; sets server options (body limit, timeouts, `trustProxy`), wires `unhandledRejection`/`uncaughtException` and SIGTERM/SIGINT graceful shutdown, then `listen()`s. It is HTTP only; queue consumers and the schedule run in the worker services.
 2. `src/app.ts` — `build()` creates the Fastify instance with the Zod type provider (`validatorCompiler`/`serializerCompiler`), registers plugins, then registers routes inside `server.after()`.
-3. `src/plugins/index.ts` — `registerPlugins()` initializes, in order: SuperTokens (auth) + its Fastify plugin and error handler, the auth rate limit, CORS, WebSocket, the Kafka producer, and Swagger (only when `SWAGGER=1`). BullMQ consumers and scheduled jobs deliberately do not register here.
+3. `src/plugins/index.ts` — `registerPlugins()` initializes, in order: SuperTokens (auth) + its Fastify plugin and error handler, the auth rate limit, CORS, WebSocket, the Kafka producer, and Swagger (only when `API_DOCS_ENABLED=true`). BullMQ consumers and scheduled jobs deliberately do not register here.
 4. `src/registerRoutes.ts` — a single `routeConfigs` array maps each module's route plugin to a URL prefix. **To add a new route group, import its route plugin and add an entry here.** Public (unauthenticated) routes live under `/api/public/*`; everything else expects a session.
+5. `src/routes/legacyPaths.ts` — URLs renamed on 2026-11-10 to match the dashboard (`/api/contacts`, `/api/inbox`, `/api/automation/{rules,journeys}`, `/api/whatsapp/*`, `/api/surveys/*`, …). Installed mobile apps still call the old ones, so `rewriteUrl` in `app.ts` maps an old prefix to its new one before routing; routes exist only at the new URL. **Renaming a prefix in `registerRoutes.ts` means adding a row there.** Never rename a URL an outside service calls (Meta webhooks and flow endpoints under `/api/wa`, `/api/public/*`, `/api/external/*`, `/api/integration/external/*`). Audit log rows keep the path they were written with; `currentApiPath` reads old ones as new. `legacy_api_path_requests_total{prefix}` shows when a row is safe to delete.
 
 ## Module pattern
 
-Feature modules live in `src/modules/<domain>/` and follow a consistent file layout (see `src/modules/survey/` as the reference):
+Feature modules live in `src/modules/<domain>/` and follow a consistent file layout (see `src/modules/surveys/` as the reference):
 
 - `*.route.ts` — Fastify plugin exporting the route definitions; attaches `preHandler` hooks and Zod `schema` per route. Public variants are named `*.public.route.ts`.
 - `*.controller.ts` — request handlers (the `*Handler` functions).
@@ -111,7 +131,7 @@ Feature modules live in `src/modules/<domain>/` and follow a consistent file lay
 
 Every route under `/api` declares who may reach it, and the root hooks in `src/registerRoutes.ts` enforce it. There is no per-route role check to remember.
 
-1. **Declaration** — a route carries `config: { permission: "inbox.reply" }` (any one of a list also works) or `config: { access: "session" | "public" | "token" }`. A module usually declares once at the top of its plugin with `declareAccess(server, { read: "x.read", write: "x.manage" })` (`src/authz/registry.ts`); a route's own `config` wins over the module default. `/api/public/*`, `/api/health/*`, `/api/external/v1/*` and `/api/external/v2/*` are tagged by prefix. With `AUTHZ_STRICT=1` (set in vitest) an undeclared route fails boot.
+1. **Declaration** — a route carries `config: { permission: "inbox.reply" }` (any one of a list also works) or `config: { access: "session" | "public" | "token" }`. A module usually declares once at the top of its plugin with `declareAccess(server, { read: "x.read", write: "x.manage" })` (`src/authz/registry.ts`); a route's own `config` wins over the module default. `/api/public/*`, `/api/health/*`, `/api/external/v1/*` and `/api/external/v2/*` are tagged by prefix. With `AUTHZ_STRICT=true` (set in vitest) an undeclared route fails boot.
 2. **`authorize`** (`src/authz/authorize.ts`), a root `preHandler` — for a session or permission route it validates the SuperTokens session, loads the **actor** (`src/authz/actor.ts`: role key, permissions, team scope, cached in Redis for 60 s under `authz:<userId>:<orgId>`) and sets `request.actor` plus the legacy `request.user` (`role` now comes from the database, not the token). A missing permission answers `403 { reason: "permission", permission }`. `AUTHZ_AUDIT_ONLY=<module,...>` logs the refusal and lets the request through, per `/api/<module>` prefix, for a rollout soak.
 3. `getVerifySubscriptionHandler([...features])` (`src/utils/auth.ts`) — plan gate; `403 { reason: "subscription" }`. Kept separate from permissions on purpose: "upgrade" and "ask your admin" are different messages.
 4. **Scope** (`src/authz/scope.ts`, `resourceScope.ts`) — team-scoped roles see only rows whose team is in `actor.scope.teamIds`; `inScope`, `assertInScope`, `scopeWhere`, `surveyInScope`, `pipelineInScope`. Module `*.auth.ts` guards read `request.actor`, never `request.user.role`.
@@ -120,7 +140,7 @@ Every route under `/api` declares who may reach it, and the root hooks in `src/r
 
 Non-user principals (API key, Zapier, the widget socket, the public flow callback) set `request.principal` and get an actor from it (`src/authz/principal.ts`); an API key's `scopes` narrow it.
 
-**Staff console** (`/api/staff`, `src/modules/staff/`, UI in the `rateup-admin` repo) is a separate auth world: RateUp employees sign in with Google Workspace against the `StaffUser` allowlist, never SuperTokens. Its routes carry `access: "staff"`, which `authorize` stands aside for; `staff.plugin.ts` runs its own `onRequest` chain for every route inside it (Cloudflare Access JWT → Origin → rate limit → staff session → CSRF), so a new staff route registered in that plugin inherits all of it. `access: "staff"` outside `/api/staff/` refuses to boot. Mutations record `StaffAuditLog` rows via `recordStaffAction(tx, request, …)`; a fallback row catches any that don't. Destructive actions call `assertRecentAuth(request.staffSession)` for step-up. The console is off unless `STAFF_CONSOLE_ORIGIN` is set (see `.env.example` and `staff.config.ts`; there is no proxy secret any more); the first owner comes from `pnpm run staff:add <email> --owner`.
+**Staff console** (`/api/staff`, `src/modules/platform/staff/`, UI in the `rateup-admin` repo) is a separate auth world: RateUp employees sign in with Google Workspace against the `StaffUser` allowlist, never SuperTokens. Its routes carry `access: "staff"`, which `authorize` stands aside for; `staff.plugin.ts` runs its own `onRequest` chain for every route inside it (Cloudflare Access JWT → Origin → rate limit → staff session → CSRF), so a new staff route registered in that plugin inherits all of it. `access: "staff"` outside `/api/staff/` refuses to boot. Mutations record `StaffAuditLog` rows via `recordStaffAction(tx, request, …)`; a fallback row catches any that don't. Destructive actions call `assertRecentAuth(request.staffSession)` for step-up. The console is off unless `STAFF_CONSOLE_ORIGIN` is set (see `.env.example` and `staff.config.ts`; there is no proxy secret any more); the first owner comes from `pnpm run staff:add <email> --owner`.
 
 Authentication is **SuperTokens** (EmailPassword + Google/Apple ThirdParty + Passwordless SMS), all configured in `src/config.ts`. Sign-up/sign-in overrides there create the app-side user record and stamp `orgId` onto the session.
 
@@ -148,7 +168,7 @@ has the file layout and the rules.
   cannot connect, and keeps reconnecting in the background. `/api/health` stays a plain liveness
   check (Railway's deploy healthcheck); `/api/health/ready` answers 503 while Kafka is
   unreachable. Topics (`status-events`, `wa-webhooks` and their `-dlq`s) are created at boot with
-  12 partitions; brokers come from `KAFKA_BROKERS` (comma-separated) or `KAFKA_URL`. Consumers
+  12 partitions; brokers come from `KAFKA_BROKERS` (comma-separated). Consumers
   live in `apps/worker-kafka/src/consumers/`.
 
 ## Deployment Topology
@@ -217,7 +237,7 @@ Rules to keep in mind when adding code:
 
 - **Concurrency pairs with the pool.** Every process opens two `pg` pools of
   `DB_POOL_MAX` (default 10) — Prisma's adapter pool and the raw pool in
-  `src/utils/db.ts`. `WA_MESSAGE_CONCURRENCY` (default 50) is how many campaign
+  `src/utils/db.ts`. `CAMPAIGN_SEND_CONCURRENCY` (default 50) is how many campaign
   sends one bullmq process holds in flight; keep it within a small multiple of
   `DB_POOL_MAX` and raise them together. The total to budget against Postgres'
   `max_connections` (or PgBouncer's pool) is `DB_POOL_MAX × 2 × replicas` per service.
@@ -227,7 +247,7 @@ Rules to keep in mind when adding code:
   counter nothing enforces — `campaignCreditsUsed` and the active-contact meter must
   stay conditional UPDATEs.
 - **Health and metrics.** The bullmq and kafka services serve `/health` (Redis ping /
-  consumer connected) and `/metrics` (prom-client: queue depth, failures, consumer lag,
+  consumer connected) and `/metrics` (@prometheus-io/client: queue depth, failures, consumer lag,
   Meta errors, send latency, process metrics) on `PORT` via
   `workers/shared/healthServer.ts`; Railway's `healthcheckPath` points at `/health`.
   The api serves `/api/health/metrics` only when `METRICS_TOKEN` is set.
@@ -375,6 +395,13 @@ its Kafka consumer became `kafka/consumers/status.consumer.ts`, and its `src/uti
   `@prisma/client`.
 - **Formatting/linting**: `vp fmt` (oxfmt, root `vite.config.ts`) + `vp lint` (oxlint, this app's `vite.config.ts`),
   never Prettier or ESLint. The pre-commit hook only formats, so run `vp lint` yourself.
+- **A contact's phone, email, BSUID, Instagram id and Messenger id are identities**, not
+  Contact columns (dropped 2026-11-10): each is the contact's primary `ContactIdentity` of its
+  kind. Read them with `primaryIdentities` + `withContactFields`, filter with
+  `contactWhereIdentity`, and write with `setPrimaryIdentities` / `findOrCreateContactByIdentity`
+  (`src/modules/contacts/identity/contactFields.ts`); raw SQL uses `primaryIdentitySql`. API
+  responses still carry `phone`/`email`/`bsuid`/`igsId`/`psid`. TypeScript does not catch a
+  nested `contact: { phone }` in a where or select, so grep when touching contact queries.
 - **Node.js 26.x (LTS)** is required (`engines` in package.json). Configuration comes from `.env`.
 - **External partner API**: two versions, distinct from the first-party `/api/*` routes, with
   token auth via the `apiAccessToken` module. `src/external/v2/` (`/api/external/v2`, current)
@@ -383,3 +410,7 @@ its Kafka consumer became `kafka/consumers/status.consumer.ts`, and its `src/uti
   integrations. Each key works only on its own `version`. Both roots share
   `src/external/shared/` (error envelope, scopes, idempotency, rate limits, `partnerHooks.ts`);
   every route declares a `config.permission` that the key's scopes must include.
+  `src/external/mcp/` serves v2 as an MCP server at `/api/external/v2/mcp` (stateless
+  Streamable HTTP, same `rk_` key): each v2 route is a tool built from its Zod schemas, and a
+  call is `inject`ed into the real route. A new v2 route needs a name in `TOOL_NAMES`
+  (`mcp/tools.ts`), or `null` to leave it out; `tools.test.ts` fails otherwise.

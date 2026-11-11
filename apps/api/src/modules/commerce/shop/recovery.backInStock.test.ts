@@ -11,7 +11,7 @@ const db = vi.hoisted(() => ({
     update: vi.fn(),
   },
   shopOrder: { findUnique: vi.fn() },
-  contact: { upsert: vi.fn() },
+  contact: { findFirst: vi.fn() },
 }));
 const orders = vi.hoisted(() => ({ addOrderEvent: vi.fn(), cancelOrder: vi.fn() }));
 const verify = vi.hoisted(() => ({

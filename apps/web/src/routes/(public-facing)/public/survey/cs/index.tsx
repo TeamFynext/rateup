@@ -16,12 +16,12 @@ function Page() {
     <div className="px-[10vw] py-[5vh] bg-[#F7F6FB] min-h-screen w-full">
       <>
         {/* <Image pb={30}
-              src={`${import.meta.env.VITE_CLOUDFRONT_WEB_IMAGES_URL}/images/logo.svg`} 
+              src={`${import.meta.env.VITE_WEB_IMAGES_CDN_URL}/images/logo.svg`} 
               alt="RateUp Logo" width={140} height={35} /> */}
 
         <img
           className={`pb-[30px] ${largeScreen ? "w-[600px]" : "w-[310px]"}`}
-          src={`${import.meta.env.VITE_CLOUDFRONT_WEB_IMAGES_URL}/images/cs-logo.jpeg`}
+          src={`${import.meta.env.VITE_WEB_IMAGES_CDN_URL}/images/cs-logo.jpeg`}
           alt="Govt Logo"
         />
       </>

@@ -52,7 +52,7 @@ import {
  * auto-created by the broker before that would have only one.
  */
 async function start() {
-  // Throws when neither KAFKA_BROKERS nor KAFKA_URL is set.
+  // Throws when KAFKA_BROKERS is not set.
   const kafka = createKafkaClient();
   // Before subscribing: a consumer group subscribed to a missing topic would
   // have it auto-created with the broker default of one partition.

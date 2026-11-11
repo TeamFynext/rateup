@@ -1,9 +1,9 @@
 import type { RequestPayload } from "@/types/api.ts";
 import type { ReviewSuggestion, WebSurveyTheme } from "@/types/global";
 
-import { axiosClient, axiosClientIP } from "../apiClient";
+import { axiosClient } from "../apiClient";
 
-const SURVEYURL = "/survey";
+const SURVEYURL = "/surveys";
 const SURVEY_PUBLIC_URL = "/public/survey";
 
 /** Mirrors FORM_CLOSED_REASON in the API's survey.limits.ts. */
@@ -106,7 +106,7 @@ export async function getSurveysSummary() {
 
 export const getSurveysList = () =>
   axiosClient({
-    url: `/survey`,
+    url: SURVEYURL,
     method: "GET",
   });
 // ----------get all survey landings-------------
@@ -179,17 +179,17 @@ export async function getPublicSurvey(surveyId: string, ip?: string) {
     };
   }
 
-  const res = await axiosClientIP.get(`${SURVEY_PUBLIC_URL}/${surveyId}`, config);
+  const res = await axiosClient.get(`${SURVEY_PUBLIC_URL}/${surveyId}`, config);
   return res.data as ExtendedSurvey;
 }
 
 export async function getPublicSurveyGoogleLink(surveyTeamMapId: string) {
-  const res = await axiosClientIP.get(`${SURVEY_PUBLIC_URL}/googlelink/${surveyTeamMapId}`);
+  const res = await axiosClient.get(`${SURVEY_PUBLIC_URL}/googlelink/${surveyTeamMapId}`);
   return res.data as string;
 }
 
 export async function getPhoneNumberFromSurveyTeamMapId(surveyTeamMapId: string) {
-  const res = await axiosClientIP.get(`${SURVEY_PUBLIC_URL}/${surveyTeamMapId}/phone`);
+  const res = await axiosClient.get(`${SURVEY_PUBLIC_URL}/${surveyTeamMapId}/phone`);
   return res.data as { phone: string };
 }
 

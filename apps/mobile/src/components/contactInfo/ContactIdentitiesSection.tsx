@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, type ComponentType } from "react";
 import {
   ActivityIndicator,
   Alert,
@@ -11,11 +11,10 @@ import {
   useColorScheme,
 } from "react-native";
 import { useRouter } from "expo-router";
+import { FontAwesome } from "@expo/vector-icons";
 import {
-  Facebook,
   Fingerprint,
   Globe,
-  Instagram,
   Mail,
   MessageCircle,
   MoreHorizontal,
@@ -38,12 +37,23 @@ import PhoneField, { toInternationalDigits } from "@/components/common/PhoneFiel
 
 import { Pill, Section, SectionNote } from "./InfoSection";
 
-const KIND_ICON: Record<IdentityKind, typeof Phone> = {
+type IdentityIcon = ComponentType<{ size?: number; color?: string }>;
+
+// lucide 1.x dropped its brand icons, so Instagram and Messenger use FontAwesome like the
+// rest of the app's channel badges.
+const InstagramIcon: IdentityIcon = ({ size, color }) => (
+  <FontAwesome name="instagram" size={size} color={color} />
+);
+const FacebookIcon: IdentityIcon = ({ size, color }) => (
+  <FontAwesome name="facebook" size={size} color={color} />
+);
+
+const KIND_ICON: Record<IdentityKind, IdentityIcon> = {
   PHONE: Phone,
   EMAIL: Mail,
   WA_BSUID: MessageCircle,
-  IG_SCOPED: Instagram,
-  FB_PSID: Facebook,
+  IG_SCOPED: InstagramIcon,
+  FB_PSID: FacebookIcon,
   WEBCHAT: Globe,
   EXTERNAL: Fingerprint,
 };

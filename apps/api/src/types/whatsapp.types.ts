@@ -404,7 +404,7 @@ export interface WaInternalMessageBody {
   /** The finished sentence the thread shows (see createInternalWaMessage). */
   summary?: string;
   /** Present on a voice call's thread entry. */
-  call?: import("../modules/whatsapp/calling/calling.types.js").CallLogEntry;
+  call?: import("../modules/inbox/calls/calling.types.js").CallLogEntry;
 }
 
 export interface WaSendMessageBody {

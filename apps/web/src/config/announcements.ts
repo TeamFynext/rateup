@@ -40,6 +40,16 @@ export interface Announcement {
 
 export const ANNOUNCEMENTS: readonly Announcement[] = [
   {
+    id: "2026-11-09-inbox-campaign-filter",
+    title: "Find campaign replies in the inbox",
+    summary:
+      "Filter the inbox by campaign to see only the customers who replied to it, or use View replies on any campaign page.",
+    publishedAt: "2026-11-09",
+    kinds: ["new"],
+    area: "Inbox",
+    link: { to: "/dashboard/inbox", search: { tab: "all" }, label: "Open Inbox" },
+  },
+  {
     id: "2026-11-05-continue-on-whatsapp",
     title: "Continue on WhatsApp step in journeys",
     summary:

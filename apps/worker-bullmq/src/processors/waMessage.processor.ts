@@ -1,7 +1,7 @@
 // Ported from message-dispatcher/src/index.ts.
 //
 // The hot path of the whole system: one job per campaign recipient, at
-// concurrency `WA_MESSAGE_CONCURRENCY` (default 50). `processParticipant` renders the template for that contact and
+// concurrency `CAMPAIGN_SEND_CONCURRENCY` (default 50). `processParticipant` renders the template for that contact and
 // sends it.
 //
 // Completion is tracked in a Redis set rather than by watching the queue, because
@@ -15,11 +15,11 @@ import { log } from "@rateup/api/workers/shared/logger.js";
 import baseRedis from "@rateup/api/utils/redisConnection.js";
 import { processParticipant } from "@rateup/api/workers/shared/modules/messageDispatch/messageDispatch.service.js";
 import { WaFailureClass } from "@rateup/api/utils/waRetryableErrors.js";
-import { notify } from "@rateup/api/modules/notification/notify.js";
+import { notify } from "@rateup/api/modules/settings/notifications/notify.js";
 import { campaignSendJobsKey, getCampaignById } from "@rateup/api/workers/shared/whatsapp/index.js";
-import { completeCampaignSend } from "@rateup/api/modules/campaign/campaignSend.service.js";
-import { scheduleNextRetry } from "@rateup/api/modules/campaign/campaignRetry.service.js";
-import { finishCampaignIfSettled } from "@rateup/api/modules/campaign/campaignSettle.service.js";
+import { completeCampaignSend } from "@rateup/api/modules/campaigns/campaignSend.service.js";
+import { scheduleNextRetry } from "@rateup/api/modules/campaigns/campaignRetry.service.js";
+import { finishCampaignIfSettled } from "@rateup/api/modules/campaigns/campaignSettle.service.js";
 import {
   acquirePhoneSendSlot,
   resolvePhoneRate,
@@ -35,12 +35,15 @@ import {
  *
  * Default 50, down from 250: at 250 against two pools of `DB_POOL_MAX` = 10 the
  * jobs mostly sat waiting for a connection, and the waits are what timed out.
- * Keep `WA_MESSAGE_CONCURRENCY` within a small multiple of `DB_POOL_MAX` (a send
+ * Keep `CAMPAIGN_SEND_CONCURRENCY` within a small multiple of `DB_POOL_MAX` (a send
  * holds a connection only for its store, not for the Graph call) and raise them
  * together — budgeting `DB_POOL_MAX × 2 pools × replicas` against Postgres'
  * `max_connections` (or PgBouncer's pool). See AGENTS.md → "Worker capacity".
  */
-const WA_MESSAGE_CONCURRENCY = Number.parseInt(process.env.WA_MESSAGE_CONCURRENCY || "50", 10);
+const CAMPAIGN_SEND_CONCURRENCY = Number.parseInt(
+  process.env.CAMPAIGN_SEND_CONCURRENCY || "50",
+  10,
+);
 
 const workerConnection = baseRedis.duplicate();
 
@@ -123,7 +126,7 @@ export const waMessageWorker = new Worker(
     removeOnFail: {
       count: 1,
     },
-    concurrency: WA_MESSAGE_CONCURRENCY,
+    concurrency: CAMPAIGN_SEND_CONCURRENCY,
   },
 );
 

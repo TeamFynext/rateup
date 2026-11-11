@@ -4,7 +4,7 @@ import { log } from "@rateup/api/utils/logger.js";
 import {
   deliverOutgoingWebhook,
   type OutgoingWebhookJobData,
-} from "@rateup/api/modules/webhook/webhook.service.js";
+} from "@rateup/api/modules/settings/webhooks/webhook.service.js";
 
 export const outgoingWebhookWorker = new Worker(
   "outgoingWebhookQueue",

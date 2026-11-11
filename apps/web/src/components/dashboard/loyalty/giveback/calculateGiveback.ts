@@ -9,7 +9,7 @@
  *
  * ─────────────────────────────────────────────────────────────────────────────
  * MIRRORED, BY HAND, IN THE API:
- *   rateup-api/src/modules/loyalty/giveback.ts
+ *   apps/api/src/modules/loyalty/giveback.ts
  * Both files carry the same test table. Change one, change the other — the wizard
  * computes this live as the user types, and the server repeats it at activation to
  * warn. The two must never disagree.

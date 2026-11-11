@@ -7,7 +7,8 @@ import z from "zod";
 
 import { log } from "../../utils/logger.js";
 import { LoyaltyError, type LoyaltyErrorCode } from "../../modules/loyalty/loyalty.errors.js";
-import { ApiAuthError } from "../../modules/apiAccessToken/apiAccessToken.auth.js";
+import { ApiAuthError } from "../../modules/settings/apiKeys/apiKey.auth.js";
+import { IdentityTakenError } from "../../modules/contacts/identity/identity.service.js";
 
 /**
  * One error shape for the whole partner API.
@@ -39,7 +40,7 @@ export type ExternalErrorCode =
   | "unauthorized"
   | "subscription_required"
   | "subscription_expired"
-  /// RateUp staff have suspended the account (src/modules/staff).
+  /// RateUp staff have suspended the account (src/modules/platform/staff).
   | "org_suspended"
   /// The key's scopes do not include the route's permission (scopes.ts).
   | "insufficient_scope"
@@ -248,6 +249,12 @@ export function externalErrorHandler(
   if (error instanceof LoyaltyError) {
     const mapped = LOYALTY_ERROR_MAP[error.code];
     return send(reply, requestId, mapped.status, mapped.code, error.message, error.details);
+  }
+
+  // A phone or email another contact already has: the identity-era form of a P2002 on
+  // the old Contact columns, answered the same way.
+  if (error instanceof IdentityTakenError) {
+    return send(reply, requestId, 409, "contact_already_exists", "That record already exists");
   }
 
   const prismaCode = (error as { code?: string }).code;

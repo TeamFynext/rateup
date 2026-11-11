@@ -206,6 +206,19 @@ interface ContactsWithLastMessageResponse {
   nextOffset: number | null;
 }
 
+/** A campaign the inbox list can be filtered by — only ones that have sent. */
+export interface InboxCampaignOption {
+  id: string;
+  name: string;
+  type: "WHATSAPP" | "DRIP";
+  sentAt: string | null;
+}
+
+export async function getInboxCampaignOptions() {
+  return (await axiosClient.get(`${WA_CONTACT_BASE_PATH}/campaign-options`))
+    .data as InboxCampaignOption[];
+}
+
 export async function getFilteredContacts(filterData: string, page: number) {
   return (
     await axiosClient.get(
@@ -449,7 +462,7 @@ export async function updateConversation(
   data: { subject?: string | null; description?: string | null },
 ) {
   // NB: axiosClient's baseURL already ends in `/api` — paths must not repeat it.
-  return (await axiosClient.put(`/contact/conversations/${conversationId}`, data))
+  return (await axiosClient.put(`/inbox/conversations/${conversationId}`, data))
     .data as UpdatedConversation;
 }
 
@@ -462,7 +475,7 @@ export async function updateConversation(
  */
 export async function deleteConversation(conversationId: string) {
   // NB: axiosClient's baseURL already ends in `/api` — paths must not repeat it.
-  return (await axiosClient.delete(`/contact/conversations/${conversationId}`)).data as {
+  return (await axiosClient.delete(`/inbox/conversations/${conversationId}`)).data as {
     id: string;
     contactId: string;
     deletedMessages: number;
@@ -479,8 +492,7 @@ export async function deleteConversation(conversationId: string) {
  */
 export async function deleteConversations(conversationIds: string[]) {
   // NB: axiosClient's baseURL already ends in `/api` — paths must not repeat it.
-  return (await axiosClient.delete(`/contact/conversations`, { data: { conversationIds } }))
-    .data as {
+  return (await axiosClient.delete(`/inbox/conversations`, { data: { conversationIds } })).data as {
     conversationIds: string[];
     contactIds: string[];
     deletedConversations: number;
@@ -496,7 +508,7 @@ export interface UpdatedConversation {
 
 /**
  * Inbox Tickets v2 — one conversation of a contact, as returned by
- * `GET /api/contact/conversations/by-contact/:contactId`.
+ * `GET /api/inbox/conversations/by-contact/:contactId`.
  *
  * This is NOT an inbox row: it carries only ticket-level fields, so it must be
  * merged onto a real contact before it can be handed to `setSelectedContact`.
@@ -518,7 +530,7 @@ export interface ContactConversation {
 /** Every conversation for a contact, newest first, org-scoped by the API. */
 export async function getConversationsByContactId(contactId: string) {
   // NB: axiosClient's baseURL already ends in `/api` — paths must not repeat it.
-  return (await axiosClient.get(`/contact/conversations/by-contact/${contactId}`))
+  return (await axiosClient.get(`/inbox/conversations/by-contact/${contactId}`))
     .data as ContactConversation[];
 }
 

@@ -1,11 +1,11 @@
 import { FastifyReply, FastifyRequest } from "fastify";
 import type { OutgoingTemplateComponent } from "../../../types/whatsapp.types.js";
-import { sendTemplateToUserCore } from "../../../modules/whatsapp/messageTemplates/wa_templates.controller.js";
-import { TemplateTypeParamsSchema } from "../../../modules/whatsapp/messageTemplates/wa_templates.schema.js";
+import { sendTemplateToUserCore } from "../../../modules/meta/whatsapp/templates/templates.controller.js";
+import { TemplateTypeParamsSchema } from "../../../modules/meta/whatsapp/templates/templates.schema.js";
 import {
   getTemplateByIdAndOrgId,
   getTemplatesByOrgIdAndTemplateType,
-} from "../../../modules/whatsapp/messageTemplates/wa_templates.service.js";
+} from "../../../modules/meta/whatsapp/templates/templates.service.js";
 import {
   SendTemplateByNameToPhone,
   SendTemplateToContacts,
@@ -14,18 +14,22 @@ import {
 import type { ByTemplateIdParamsSchema } from "./wa_templates.schema.js";
 import { sendTemplateToPhone } from "./sendTemplateToPhone.js";
 import prisma from "../../../utils/prisma.js";
+import {
+  contactFields,
+  primaryIdentities,
+} from "../../../modules/contacts/identity/contactFields.js";
 import { log } from "../../../utils/logger.js";
 import { ParseError, parsePhoneNumberWithError } from "libphonenumber-js";
-import { TemplateSendError } from "../../../modules/whatsapp/messageTemplates/templateSendError.js";
+import { TemplateSendError } from "../../../modules/meta/whatsapp/templates/templateSendError.js";
 import {
   ActiveContactLimitError,
   OrgSuspendedError,
-} from "../../../modules/whatsapp/whatsappSurvey/wasurvey.auth.js";
-import { getWaSettings } from "../../../modules/whatsapp/settings/wa_settings.service.js";
+} from "../../../modules/meta/whatsapp/webhook/whatsapp.auth.js";
+import { getWaSettings } from "../../../modules/meta/whatsapp/settings/settings.service.js";
 import { WaTemplateComponentType } from "../../../types/enums.js";
 import { templateFileUploadSchema } from "./wa_templates.utils.js";
 import FormData from "form-data";
-import { callMetaApi } from "../../../modules/whatsapp/wa_axios.js";
+import { callMetaApi } from "../../../modules/meta/whatsapp/wa_axios.js";
 
 /**
  * A `teamId` decides which team a send (and its inbox thread) is filed under, and the
@@ -312,8 +316,7 @@ export async function sendTemplatesToContactsExternalController(
     },
     select: {
       id: true,
-      phone: true,
-      bsuid: true,
+      ...primaryIdentities,
     },
   });
 
@@ -321,7 +324,8 @@ export async function sendTemplatesToContactsExternalController(
   const failed: string[] = [];
   for (const contact of contacts) {
     // The phone, or the business-scoped user ID (BSUID) of a customer whose phone is withheld.
-    const address = contact.phone ?? contact.bsuid;
+    const { phone, bsuid } = contactFields(contact.identities);
+    const address = phone ?? bsuid;
     if (!address) continue;
     try {
       await sendTemplateToPhone({

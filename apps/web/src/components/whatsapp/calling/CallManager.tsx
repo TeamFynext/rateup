@@ -16,7 +16,7 @@ import { toast } from "sonner";
 
 import { type CallDto, getRingingCalls } from "@/backend/whatsapp/calling/calling.api";
 import { CreativeAvatar } from "@/components/ui/creative-avatar.tsx";
-import { WS_REOPENED_EVENT } from "@/hooks/useChatSocket.tsx";
+import { isInboxSocketOpen, WS_CLOSED_EVENT, WS_REOPENED_EVENT } from "@/hooks/useChatSocket.tsx";
 import { useCan } from "@/hooks/usePermission.ts";
 import { cn } from "@/lib/utils.ts";
 import {
@@ -35,7 +35,10 @@ import { getApiErrorMessage } from "@/utils/apiError.ts";
 import { formatCallDuration } from "@/utils/whatsapp/callFormat.ts";
 import { preloadRingtone, retryRingtone } from "@/utils/whatsapp/callMedia.ts";
 
-/** Backstop for a lost push. A call rings for about a minute, so this is never the only chance. */
+/**
+ * Polling while the socket is down, when pushes cannot arrive. A call rings for about a
+ * minute, so this is never the only chance.
+ */
 const RESYNC_INTERVAL_MS = 10_000;
 
 /**
@@ -55,11 +58,13 @@ export default function CallManager() {
   const { t } = useTranslation();
 
   // The socket pushes rings as they happen; this catches the ones it could not — a tab
-  // opened mid-ring, a socket that was reconnecting, a laptop waking from sleep.
+  // opened mid-ring, a socket that was reconnecting, a laptop waking from sleep. While the
+  // socket is connected nothing polls: a read on mount, on reconnect and on focus is enough.
   useEffect(() => {
     if (!canReply) return;
     preloadRingtone();
     let inFlight = false;
+    let timer: ReturnType<typeof setInterval> | null = null;
     const resync = () => {
       if (inFlight || document.visibilityState === "hidden") return;
       inFlight = true;
@@ -70,15 +75,28 @@ export default function CallManager() {
           inFlight = false;
         });
     };
+    const startPolling = () => {
+      timer ??= setInterval(resync, RESYNC_INTERVAL_MS);
+    };
+    const stopPolling = () => {
+      if (timer) clearInterval(timer);
+      timer = null;
+    };
+    const onReopened = () => {
+      stopPolling();
+      resync();
+    };
     const onVisible = () => document.visibilityState === "visible" && resync();
     resync();
-    const timer = setInterval(resync, RESYNC_INTERVAL_MS);
-    window.addEventListener(WS_REOPENED_EVENT, resync);
+    if (!isInboxSocketOpen()) startPolling();
+    window.addEventListener(WS_REOPENED_EVENT, onReopened);
+    window.addEventListener(WS_CLOSED_EVENT, startPolling);
     window.addEventListener("online", resync);
     document.addEventListener("visibilitychange", onVisible);
     return () => {
-      clearInterval(timer);
-      window.removeEventListener(WS_REOPENED_EVENT, resync);
+      stopPolling();
+      window.removeEventListener(WS_REOPENED_EVENT, onReopened);
+      window.removeEventListener(WS_CLOSED_EVENT, startPolling);
       window.removeEventListener("online", resync);
       document.removeEventListener("visibilitychange", onVisible);
     };

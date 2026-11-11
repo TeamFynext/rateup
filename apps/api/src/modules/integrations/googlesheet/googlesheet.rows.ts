@@ -2,6 +2,7 @@ import dayjs from "dayjs";
 
 import type { Integration } from "../../../generated/prisma/client.js";
 import prisma from "../../../utils/prisma.js";
+import { contactFields, primaryIdentities } from "../../contacts/identity/contactFields.js";
 import { PageType, QuestionType, WaQuestions } from "../../../types/enums.js";
 import { getContent } from "../../../utils/survey/response.data.js";
 import {
@@ -10,8 +11,8 @@ import {
   getFormattedResponse,
   markdownToPlainText,
   toCell,
-} from "../../response/response.service.js";
-import { getFlowBySurveyId } from "../../whatsapp/flows/flow.service.js";
+} from "../../surveys/responses/response.service.js";
+import { getFlowBySurveyId } from "../../meta/whatsapp/flows/flow.service.js";
 import { googleClientFor } from "./googlesheet.auth.js";
 
 /**
@@ -112,7 +113,7 @@ export async function appendResponseToSheet(
       language: true,
       createdAt: true,
       tag: true,
-      Contact: { select: { phone: true } },
+      Contact: { select: primaryIdentities },
       surveyTeamMap: {
         select: {
           survey: { select: { spreadSheetId: true, questions: true, id: true } },
@@ -163,9 +164,7 @@ export async function appendResponseToSheet(
         Object.entries(answerValue as Record<string, unknown>).forEach(
           ([key, value]) =>
             (resObj[(qstnTitle + ":" + key).trim()] =
-              key == "photo"
-                ? `https://${process.env.AWS_CLOUDFRONT_DOMAIN}/${value}`
-                : toCell(value)),
+              key == "photo" ? `https://${process.env.MEDIA_CDN_DOMAIN}/${value}` : toCell(value)),
         );
       else if (qstn.type === QuestionType.MCQGrid)
         Object.entries(answerValue as Record<string, Choice>).forEach(
@@ -185,7 +184,7 @@ export async function appendResponseToSheet(
       );
     }
   });
-  resObj["Respondent's Mobile Number"] = toCell(response.Contact?.phone);
+  resObj["Respondent's Mobile Number"] = toCell(contactFields(response.Contact?.identities).phone);
   resObj["Tag"] = toCell(response.tag);
   resObj["tag"] = toCell(response.tag); // for old synced response
 

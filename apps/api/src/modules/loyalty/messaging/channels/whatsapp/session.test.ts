@@ -2,7 +2,7 @@ import { beforeEach, describe, expect, test, vi } from "vite-plus/test";
 
 vi.mock("../../../../../utils/prisma.js", () => ({
   default: {
-    contact: { findUnique: vi.fn() },
+    contact: { findFirst: vi.fn() },
     whatsappSettings: { findFirst: vi.fn(), findMany: vi.fn() },
     waMessage: { findFirst: vi.fn() },
   },
@@ -18,14 +18,14 @@ const ORG = "11111111-1111-4111-8111-111111111111";
 const PHONE = "919000000001";
 const minutesAgo = (minutes: number) => new Date(Date.now() - minutes * 60_000);
 const heardFrom = (minutes: number) =>
-  db.contact.findUnique.mockResolvedValue({
+  db.contact.findFirst.mockResolvedValue({
     id: "c1",
     lastReceivedMessageTimeStamp: minutesAgo(minutes),
   });
 
 beforeEach(() => {
   vi.clearAllMocks();
-  db.contact.findUnique.mockResolvedValue(null);
+  db.contact.findFirst.mockResolvedValue(null);
   db.whatsappSettings.findFirst.mockResolvedValue(null);
   db.whatsappSettings.findMany.mockResolvedValue([]);
   db.waMessage.findFirst.mockResolvedValue(null);
@@ -35,15 +35,16 @@ describe("isCustomerSessionOpen", () => {
   test("a customer we have never heard from has no window", async () => {
     expect(await isCustomerSessionOpen({ orgId: ORG, phone: PHONE })).toBe(false);
 
-    db.contact.findUnique.mockResolvedValue({ id: "c1", lastReceivedMessageTimeStamp: null });
+    db.contact.findFirst.mockResolvedValue({ id: "c1", lastReceivedMessageTimeStamp: null });
     expect(await isCustomerSessionOpen({ orgId: ORG, phone: PHONE })).toBe(false);
   });
 
   test("looks the contact up by the digits, however the phone was written", async () => {
     await isCustomerSessionOpen({ orgId: ORG, phone: `+${PHONE}` });
 
-    expect(db.contact.findUnique.mock.calls[0][0].where).toEqual({
-      contact_phone_org_id_unique: { phone: PHONE, orgId: ORG },
+    expect(db.contact.findFirst.mock.calls[0][0].where).toEqual({
+      orgId: ORG,
+      identities: { some: { kind: "PHONE", value: PHONE } },
     });
   });
 

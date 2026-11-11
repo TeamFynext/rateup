@@ -18,6 +18,7 @@ import type { DataTableFeatures } from "@/components/Table/data-table-features.t
 import { HoverCard, HoverCardContent, HoverCardTrigger } from "@/components/ui/hover-card.tsx";
 import SelectedLanguageContext from "@/context/SelectedLanguage.ts";
 import { PageType, QuestionType } from "@/types/enums.ts";
+import { mediaUrl } from "@/utils/cdn";
 import { getFileNameFromKey, getFileUrlFromKey } from "@/utils/file-upload/upload.ts";
 import type { StoredResponse } from "@/utils/response.ts";
 import { getResponse, getResponseArrayByQuestionType } from "@/utils/response.ts";
@@ -244,7 +245,7 @@ function BadgeorTextorPreview({
             <div className="flex flex-col gap-4">
               <img
                 className="rounded-lg object-cover"
-                src={`${import.meta.env.VITE_AWS_CLOUDFRONT_URL}${response}`}
+                src={mediaUrl(response)}
                 alt={translations("Preview")}
               />
               <Button onClick={close}>{translations("Close")}</Button>
@@ -257,11 +258,7 @@ function BadgeorTextorPreview({
     return (
       <div className="p-2.5 min-w-50">
         {response && (
-          <a
-            href={`${import.meta.env.VITE_AWS_CLOUDFRONT_URL}${response}`}
-            download
-            className="text-primary hover:underline"
-          >
+          <a href={mediaUrl(response)} download className="text-primary hover:underline">
             Download
           </a>
         )}
@@ -309,7 +306,7 @@ function BadgeorTextorPreview({
                 <div className="flex flex-col gap-4">
                   <img
                     className="rounded-lg object-cover"
-                    src={`${import.meta.env.VITE_AWS_CLOUDFRONT_URL}${response?.photo}`}
+                    src={mediaUrl(response?.photo)}
                     alt={translations("Preview")}
                   />
                   <Button onClick={close}>{translations("Close")}</Button>

@@ -7,11 +7,11 @@ import { IntegratedApps } from "../../../types/enums.js";
 import {
   createCatalogProductsBatch,
   updateCatalogProducts,
-} from "../../whatsapp/catalog/products/product.service.js";
+} from "../../commerce/catalogs/products/product.service.js";
 import {
   CatalogProductTypes,
   type CatalogProductCoreInput,
-} from "../../whatsapp/catalog/products/product.schema.js";
+} from "../../commerce/catalogs/products/product.schema.js";
 import {
   createWooClient,
   getWooCatalogProduct,

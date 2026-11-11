@@ -5,6 +5,10 @@ import { publisher, WS_CHANNEL } from "../ws.publisher.js";
 import prisma from "../../../utils/prisma.js";
 import dbPool from "../../../utils/db.js";
 import { Prisma } from "../../../generated/prisma/client.js";
+import {
+  primaryIdentityPgSql,
+  primaryIdentitySql,
+} from "../../../modules/contacts/identity/contactFields.js";
 import type { PrismaTransaction } from "../prismaTypes.js";
 import type { WaMessageOrgTeamType } from "../../../generated/prisma/enums.js";
 import {
@@ -24,12 +28,12 @@ import type {
 import {
   metaErrorMessage,
   sendMetaMessage,
-} from "../../../modules/whatsapp/meta/metaMessage.service.js";
+} from "../../../modules/meta/shared/metaMessage.service.js";
 import type { WaStatusPricing } from "../../../types/whatsapp.types.js";
 import {
   normalizePricingCategory,
   normalizePricingModel,
-} from "../../../modules/whatsapp/metering/pricing.utils.js";
+} from "../../../modules/meta/whatsapp/metering/pricing.utils.js";
 import { aes_decrypt } from "../../../utils/encryption/encryption.utils.js";
 import { Queue } from "bullmq";
 // Defined in its own dependency-free module so `queues/campaign.queue.ts` can
@@ -39,7 +43,7 @@ import { campaignSendJobId, campaignSendJobsKey } from "../campaignSendKeys.js";
 import {
   emitWebhookEvents,
   type WebhookEventInput,
-} from "../../../modules/webhook/webhook.events.js";
+} from "../../../modules/settings/webhooks/webhook.events.js";
 import { messageStatusWebhookEvents } from "./statusWebhook.js";
 
 export { campaignSendJobsKey };
@@ -281,9 +285,9 @@ export async function enqueueCampaignMessages({
 /**
  * SQL for a contact's WhatsApp send address from the campaign's number `was`: the phone; else
  * the BSUID of that number's business (or one whose business is unknown on either side —
- * how sends behaved before businesses were stored); else, for a contact with no recorded
- * identities yet, the legacy column. Null means this number cannot reach them.
+ * how sends behaved before businesses were stored). Null means this number cannot reach them.
  */
+const PRIMARY_PHONE_SQL = primaryIdentityPgSql("c", "phone");
 const WA_BSUID_FOR_NUMBER_SQL = `(
       SELECT ci.value
       FROM "ContactIdentity" ci
@@ -296,12 +300,9 @@ const WA_BSUID_FOR_NUMBER_SQL = `(
       LIMIT 1)`;
 const HAS_BSUID_IDENTITY_SQL = `EXISTS (
       SELECT 1 FROM "ContactIdentity" ci2 WHERE ci2."contactId" = c.id AND ci2.kind = 'WA_BSUID')`;
-const WA_SEND_ADDRESS_SQL = `COALESCE(
-      c.phone,
-      ${WA_BSUID_FOR_NUMBER_SQL},
-      CASE WHEN NOT ${HAS_BSUID_IDENTITY_SQL} THEN c.bsuid END)`;
+const WA_SEND_ADDRESS_SQL = `COALESCE(${PRIMARY_PHONE_SQL}, ${WA_BSUID_FOR_NUMBER_SQL})`;
 /** True when the contact has only BSUIDs, all from businesses other than this number's. */
-const WA_UNREACHABLE_SQL = `(c.phone IS NULL AND ${HAS_BSUID_IDENTITY_SQL} AND ${WA_BSUID_FOR_NUMBER_SQL} IS NULL)`;
+const WA_UNREACHABLE_SQL = `(${PRIMARY_PHONE_SQL} IS NULL AND ${HAS_BSUID_IDENTITY_SQL} AND ${WA_BSUID_FOR_NUMBER_SQL} IS NULL)`;
 
 /** Shown on the recipient and counted as failed; not sent, so never billed. */
 export const UNREACHABLE_FROM_CHANNEL_MESSAGE =
@@ -595,9 +596,9 @@ export async function decryptAccessToken(encryptedToken: string, iv: string): Pr
   // Matches the guard in wa_settings.service.ts. Without it a missing key
   // reaches Buffer.from as undefined and throws about argument types, which
   // says nothing about the configuration that is actually missing.
-  const key = process.env.wa_access_token_encryption_key;
+  const key = process.env.META_ENCRYPTION_KEY;
   if (!key) {
-    throw new Error("wa_access_token_encryption_key is not configured");
+    throw new Error("META_ENCRYPTION_KEY is not configured");
   }
 
   return aes_decrypt(encryptedToken, Buffer.from(key, "hex"), iv);
@@ -1174,7 +1175,7 @@ export async function bulkUpdateStatuses(
             cp.id AS "participantId",
             cp."campaignId",
             cp.status AS "participantStatus",
-            c.phone AS "contactPhone",
+            ${primaryIdentitySql("c", "phone")} AS "contactPhone",
             c."orgId" AS "contactOrgId",
             c."id" AS "contactId",
             wmcpm."campaignParticipantDripStageId",

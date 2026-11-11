@@ -3,6 +3,7 @@ import dayjs from "dayjs";
 import { channelDigits } from "../../../../../utils/channelIdentifier.js";
 import prisma from "../../../../../utils/prisma.js";
 import { parsePhoneforWa } from "../../../util.js";
+import { contactWhereIdentity } from "../../../../contacts/identity/contactFields.js";
 
 /** Meta's window is 24 h from the customer's last message; keep a margin for clock skew. */
 export const SESSION_WINDOW_MINUTES = 24 * 60 - 10;
@@ -30,8 +31,8 @@ export async function findOpenSession(input: {
   const phone = parsePhoneforWa(input.phone);
   if (!phone) return null;
 
-  const contact = await prisma.contact.findUnique({
-    where: { contact_phone_org_id_unique: { phone, orgId: input.orgId } },
+  const contact = await prisma.contact.findFirst({
+    where: { orgId: input.orgId, ...contactWhereIdentity("phone", phone) },
     select: { id: true, lastReceivedMessageTimeStamp: true },
   });
   if (!contact?.lastReceivedMessageTimeStamp) return null;

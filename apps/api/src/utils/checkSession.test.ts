@@ -7,11 +7,11 @@ vi.mock("./logger.js", () => ({
   log: { error: vi.fn(), info: vi.fn(), trace: vi.fn(), warn: vi.fn() },
 }));
 vi.mock("./auditLog.js", () => ({ auditLogHook: vi.fn() }));
-vi.mock("../modules/user/user.service.js", () => ({ getOrgIdAndRole: vi.fn() }));
+vi.mock("../modules/settings/user/user.service.js", () => ({ getOrgIdAndRole: vi.fn() }));
 // Reaches Redis and the org row; the suspension rule has its own tests in
-// modules/org/orgSuspension.test.ts and authz/authorize.test.ts.
-vi.mock("../modules/org/orgSuspension.js", async (importOriginal) => {
-  const actual = await importOriginal<typeof import("../modules/org/orgSuspension.js")>();
+// modules/settings/org/orgSuspension.test.ts and authz/authorize.test.ts.
+vi.mock("../modules/settings/org/orgSuspension.js", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("../modules/settings/org/orgSuspension.js")>();
   return { ...actual, isOrgSuspended: vi.fn().mockResolvedValue(false) };
 });
 vi.mock("../authz/actor.js", async (importOriginal) => {
@@ -22,7 +22,7 @@ vi.mock("../authz/actor.js", async (importOriginal) => {
 import Session from "supertokens-node/recipe/session/index.js";
 import { log } from "./logger.js";
 import { auditLogHook } from "./auditLog.js";
-import { getOrgIdAndRole } from "../modules/user/user.service.js";
+import { getOrgIdAndRole } from "../modules/settings/user/user.service.js";
 import { checkSession } from "./checkSession.js";
 import { buildActor, isUserBlocked, loadActor } from "../authz/actor.js";
 

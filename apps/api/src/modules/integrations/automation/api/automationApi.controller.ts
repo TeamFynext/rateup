@@ -3,20 +3,20 @@ import type { FastifyReply, FastifyRequest } from "fastify";
 import { log } from "../../../../utils/logger.js";
 import prisma from "../../../../utils/prisma.js";
 import { assertPublicUrl } from "../../../../utils/ssrf.js";
-import { ContactNotFoundError } from "../../../contact/contact.errors.js";
+import { ContactNotFoundError } from "../../../contacts/contact.errors.js";
 import {
   deleteContactById,
   updateContactById,
   updateContactLabelsById,
-} from "../../../contact/contact.service.js";
+} from "../../../contacts/contact.service.js";
 import {
   addNewContactsToGroup,
   getContactGroupsByOrgId,
   getContactGroupsByTeamId,
-} from "../../../contact/contactGroup/contactGroup.service.js";
-import { getTeamsByOrgId } from "../../../team/team.service.js";
-import { sendTemplateToUserCore } from "../../../whatsapp/messageTemplates/wa_templates.controller.js";
-import { sendTextMessage } from "../../../whatsapp/whatsappSurvey/wasurvey.service.js";
+} from "../../../contacts/audiences/audience.service.js";
+import { getTeamsByOrgId } from "../../../settings/teams/team.service.js";
+import { sendTemplateToUserCore } from "../../../meta/whatsapp/templates/templates.controller.js";
+import { sendTextMessage } from "../../../meta/whatsapp/webhook/whatsapp.service.js";
 import { addAutomationHook, removeAutomationHookById } from "../automation.hooks.js";
 import { AUTOMATION_PLATFORM_LABELS, type AutomationPlatform } from "../automation.platforms.js";
 import {
@@ -35,7 +35,7 @@ import type {
 import {
   getAutomationOrg,
   listAutomationTemplates,
-  AUTOMATION_CONTACT_SELECT,
+  pickAutomationContact,
   searchAutomationContacts,
 } from "./automationApi.service.js";
 
@@ -120,7 +120,7 @@ export async function automationUpdateContactHandler(
 ) {
   try {
     const contact = await updateContactById(request.params.id, request.user.orgId, request.body);
-    return reply.send(pickContact(contact));
+    return reply.send(pickAutomationContact(contact));
   } catch (error) {
     return fail(request, reply, error, "updating a contact");
   }
@@ -249,11 +249,4 @@ export async function automationLifecyclesHandler(request: Req, reply: FastifyRe
 
 export async function automationTemplatesHandler(request: Req, reply: FastifyReply) {
   return reply.send(await listAutomationTemplates(request.user.orgId));
-}
-
-/** The same contact fields every contact action returns. */
-function pickContact(contact: Record<string, unknown>) {
-  return Object.fromEntries(
-    Object.keys(AUTOMATION_CONTACT_SELECT).map((key) => [key, contact[key] ?? null]),
-  );
 }

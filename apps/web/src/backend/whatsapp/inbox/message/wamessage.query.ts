@@ -37,6 +37,7 @@ import {
   getAssignedUserForContact,
   getConversationsByContactId,
   getFilteredContacts,
+  getInboxCampaignOptions,
   getRowKey,
   getInboxAnalytics,
   getInboxUserCount,
@@ -111,6 +112,16 @@ export const useSendNewWaMessage = (
       // a failed send looks exactly like a successful one that has not echoed yet.
       toast.error(getApiErrorMessage(error, "Could not send the message"));
     },
+  });
+};
+
+/** Sent campaigns for the inbox list's campaign filter. */
+export const useInboxCampaignOptions = (enabled = true) => {
+  return useQuery({
+    queryKey: whatsappKeys.inboxCampaignOptions(),
+    queryFn: getInboxCampaignOptions,
+    staleTime: 60_000,
+    enabled,
   });
 };
 

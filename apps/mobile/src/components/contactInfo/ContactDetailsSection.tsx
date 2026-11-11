@@ -19,7 +19,7 @@ type Row = {
 
 /**
  * Everything else the dashboard keeps about a contact: email, address, birthday, gender,
- * lifecycle stage, audiences, custom fields and notes, from `GET /api/contact/:id/details`.
+ * lifecycle stage, audiences, custom fields and notes, from `GET /api/contacts/:id/details`.
  * Empty fields are left out, so the card is only as long as what is known.
  */
 export default function ContactDetailsSection({ contactId }: Readonly<{ contactId: string }>) {

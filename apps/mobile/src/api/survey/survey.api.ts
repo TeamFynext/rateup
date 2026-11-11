@@ -1,7 +1,7 @@
 import axios from "@/config/axios";
 import { logger } from "@/utils/logger";
 
-const SURVEYURL = "/api/survey";
+const SURVEYURL = "/api/surveys";
 
 export async function getSurveys() {
   try {

@@ -7,8 +7,9 @@ import {
   Pressable,
   FlatList,
   useColorScheme,
-  Alert,
 } from "react-native";
+import * as Clipboard from "expo-clipboard";
+import * as Haptics from "expo-haptics";
 import Animated, { FadeIn, FadeOut } from "react-native-reanimated";
 import React, { useRef, useCallback, useEffect } from "react";
 import { getReplyToMid, parseWaMessage_ } from "@/api/inbox/messages/utils";
@@ -18,8 +19,7 @@ import dayjs from "dayjs";
 import { useMarkMessageAsRead } from "@/api/inbox/contacts/contacts.query";
 import { useAuth } from "@/context/AuthContext";
 import type { ListViewToken as ViewToken } from "react-native";
-import { useGetMessagesByContactId } from "@/api/inbox/messages/message.query";
-import { ChevronDown } from "lucide-react-native";
+import { ChevronDown, Copy, Reply } from "lucide-react-native";
 import { useWsData } from "@/context/UserContext";
 import { Colors } from "@/constants/colors";
 import { useMessagesStore } from "@/store/inboxStore";
@@ -29,6 +29,28 @@ import { Skeleton } from "@/components/common/Skeleton";
 import { logger } from "@/utils/logger";
 import { useReplyTargetStore } from "@/store/replyTargetStore";
 import { belongsToTicket } from "@/utils/ticketThread";
+import { useGetMessagesByContactId, useSendNewWaMessage } from "@/api/inbox/messages/message.query";
+import { MessagePlatform } from "@/constants/enums";
+import { useSessionActiveStore } from "@/utils/store";
+import { Toast } from "@/components/common/Notice";
+import { buildReactionIndex, parseReaction, reactionTargetId } from "@/utils/messageReactions";
+import { useChatChannel } from "./useChatChannel";
+import MessageActionSheet, { type MessageAction } from "./chatBody/MessageActionSheet";
+
+/** WhatsApp takes any emoji; Instagram and Messenger only a heart. */
+const WA_QUICK_REACTIONS = ["👍", "❤️", "😂", "😮", "😢", "🙏"];
+const META_QUICK_REACTIONS = ["❤️"];
+
+/** The text of a message worth copying, or null for media without a caption. */
+function copyableText(messageType: string, content: unknown): string | null {
+  if (typeof content === "string") {
+    return ["text", "quickreply", "button", "default"].includes(messageType) || !messageType
+      ? content.trim() || null
+      : null;
+  }
+  const text = (content as { text?: unknown } | null)?.text;
+  return typeof text === "string" && text.trim() ? text.trim() : null;
+}
 
 /** One shared empty thread, so the filtered list below is not rebuilt on every render. */
 const NO_MESSAGES: any[] = [];
@@ -140,13 +162,30 @@ const ChatBody = ({ id }: { id: string }) => {
   // The store keeps every message of the contact under one key (other screens read
   // it whole); the thread shows this ticket's, by the same rule as the API (see
   // `belongsToTicket`).
-  const messageList = React.useMemo(
+  const ticketMessages = React.useMemo(
     () =>
       conversationId
         ? storeMessages.filter((m: any) => belongsToTicket(m, conversationId, ticketPlatform))
         : storeMessages,
     [storeMessages, conversationId, ticketPlatform],
   );
+  // Reactions are drawn on the message they react to (as on the web), not as rows.
+  const reactionIndex = React.useMemo(() => buildReactionIndex(ticketMessages), [ticketMessages]);
+  const messageList = React.useMemo(
+    () => ticketMessages.filter((m: any) => !parseReaction(m)),
+    [ticketMessages],
+  );
+
+  // React to, copy, reply to: the message a long press opened the sheet for.
+  const channel = useChatChannel(id);
+  const isSessionActive = useSessionActiveStore((s) => s.isSessionActive);
+  const sendMessage = useSendNewWaMessage(
+    id,
+    channel.teamId,
+    channel.whatsappSettingsPhoneId,
+    channel.platform as MessagePlatform,
+  );
+  const [actionItem, setActionItem] = React.useState<any | null>(null);
   const prevMessageCount = useRef(messageList.length);
 
   useEffect(() => {
@@ -160,6 +199,23 @@ const ChatBody = ({ id }: { id: string }) => {
   }, [messageList.length]);
 
   const markedAsRead = useRef(new Set<string>());
+
+  // A reaction has no row, so it is never "viewed"; an unread one would keep the badge
+  // up. Opening the chat shows it on its message, which counts as reading it.
+  useEffect(() => {
+    if (!userId) return;
+    for (const m of ticketMessages) {
+      if (
+        m.messageBody?.exchangeProcess === "receive" &&
+        !m.messageBody.readUsers?.includes(userId) &&
+        !markedAsRead.current.has(m.id) &&
+        parseReaction(m)
+      ) {
+        markedAsRead.current.add(m.id);
+        markRead(id);
+      }
+    }
+  }, [ticketMessages, userId, id, markRead]);
 
   const onViewableItemsChangedHandler = useRef<
     (({ viewableItems }: { viewableItems: Array<ViewToken> }) => void) | null
@@ -215,37 +271,16 @@ const ChatBody = ({ id }: { id: string }) => {
               : null,
           }
         : undefined;
-      // Instagram only: a long press offers "Reply", which quotes this message in the
-      // next send (`replyToMid`). Notes and system events have nothing to quote.
-      const canQuote =
-        item.sourcePlatform === "INSTAGRAM" &&
-        !!item.messageId &&
-        !item.deletedAt &&
-        (item.messageBody?.exchangeProcess === "send" ||
-          item.messageBody?.exchangeProcess === "receive");
-      const offerReply = () =>
-        Alert.alert("Message", undefined, [
-          {
-            text: "Reply",
-            onPress: () =>
-              useReplyTargetStore.getState().setTarget({
-                contactId: id,
-                mid: item.messageId,
-                preview:
-                  typeof parsed.messageContent === "string" && parsed.messageContent
-                    ? parsed.messageContent.slice(0, 120)
-                    : parsed.messageType || "Message",
-                author:
-                  item.messageBody?.exchangeProcess === "send"
-                    ? item.sender?.name || "Automation"
-                    : contactName,
-              }),
-          },
-          { text: "Cancel", style: "cancel" },
-        ]);
       return (
         <Pressable
-          onLongPress={canQuote ? offerReply : undefined}
+          onLongPress={
+            item.messageBody?.exchangeProcess === "internal"
+              ? undefined
+              : () => {
+                  Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium).catch(() => {});
+                  setActionItem(item);
+                }
+          }
           delayLongPress={350}
           style={{
             backgroundColor: threadBg,
@@ -274,6 +309,8 @@ const ChatBody = ({ id }: { id: string }) => {
             stats={item.stats}
             quote={quote}
             editedAt={item.editedAt}
+            deletedAt={item.deletedAt}
+            reactions={item.deletedAt ? undefined : reactionIndex.get(reactionTargetId(item) ?? "")}
             note={
               item.messageBody?.exchangeProcess === "privateNote"
                 ? {
@@ -287,8 +324,109 @@ const ChatBody = ({ id }: { id: string }) => {
         </Pressable>
       );
     },
-    [messageList, threadBg, contactName, id],
+    [messageList, threadBg, contactName, reactionIndex],
   );
+
+  const sheet = React.useMemo(() => {
+    const item = actionItem;
+    if (!item) return null;
+    const close = () => setActionItem(null);
+    const parsed = parseWaMessage_(item);
+    const exchange = item.messageBody?.exchangeProcess;
+    const platform = item.sourcePlatform as string;
+    const isMeta = platform === MessagePlatform.INSTAGRAM || platform === MessagePlatform.FACEBOOK;
+    const text = item.deletedAt ? null : copyableText(parsed.messageType, parsed.messageContent);
+    const preview =
+      text ??
+      (item.deletedAt
+        ? "Deleted message"
+        : parsed.messageType
+          ? `${parsed.messageType[0].toUpperCase()}${parsed.messageType.slice(1)} message`
+          : undefined);
+
+    const actions: MessageAction[] = [];
+    if (text) {
+      actions.push({
+        key: "copy",
+        label: "Copy",
+        icon: Copy,
+        onPress: () => {
+          close();
+          Clipboard.setStringAsync(text)
+            .then(() => Toast.success("Copied"))
+            .catch(() => Toast.error("Couldn't copy"));
+        },
+      });
+    }
+    // Instagram's inline reply quotes this message in the next send (`replyToMid`).
+    if (
+      platform === MessagePlatform.INSTAGRAM &&
+      item.messageId &&
+      !item.deletedAt &&
+      (exchange === "send" || exchange === "receive") &&
+      channel.canReply
+    ) {
+      actions.push({
+        key: "reply",
+        label: "Reply",
+        icon: Reply,
+        onPress: () => {
+          close();
+          useReplyTargetStore.getState().setTarget({
+            contactId: id,
+            mid: item.messageId,
+            preview: text ? text.slice(0, 120) : parsed.messageType || "Message",
+            author: exchange === "send" ? item.sender?.name || "Automation" : contactName,
+          });
+        },
+      });
+    }
+
+    // As on the web: react to the customer's messages, on a chat you can reply in.
+    // WhatsApp also needs the 24-hour window open.
+    const targetId = reactionTargetId(item);
+    const canReact =
+      exchange === "receive" &&
+      !item.deletedAt &&
+      !!targetId &&
+      channel.canReply &&
+      !!channel.whatsappSettingsPhoneId &&
+      (isMeta || (platform === MessagePlatform.WHATSAPP && isSessionActive));
+    const current = reactionIndex.get(targetId ?? "")?.find((r) => r.from === "business")?.emoji;
+    const reactions = canReact
+      ? {
+          emojis: isMeta ? META_QUICK_REACTIONS : WA_QUICK_REACTIONS,
+          current,
+          onReact: (emoji: string) => {
+            close();
+            const removing = current === emoji;
+            // Instagram has no un-react through the API; tapping the heart again is a no-op.
+            if (removing && isMeta) return;
+            Haptics.selectionAsync().catch(() => {});
+            sendMessage.mutate({
+              type: "reaction",
+              reaction: isMeta
+                ? { toWaMessageId: targetId, reaction: "love" }
+                : { toWaMessageId: targetId, emoji: removing ? "" : emoji },
+            });
+          },
+        }
+      : undefined;
+
+    const stats = item.stats;
+    const info =
+      exchange === "send" && stats
+        ? {
+            sent: stats.sent,
+            delivered: stats.delivered,
+            read: stats.read,
+            failed: !!(stats.failed?.length || stats.error),
+          }
+        : undefined;
+
+    if (!actions.length && !reactions && !info) return null;
+    return { preview, actions, reactions, info, close };
+  }, [actionItem, channel, isSessionActive, reactionIndex, sendMessage, id, contactName]);
 
   const dynamicPaddingBottom = screenHeight > 800 ? 8 : 10;
 
@@ -388,6 +526,14 @@ const ChatBody = ({ id }: { id: string }) => {
           paddingHorizontal: 8,
         }}
         updateCellsBatchingPeriod={100}
+      />
+      <MessageActionSheet
+        visible={!!sheet}
+        onClose={() => setActionItem(null)}
+        preview={sheet?.preview}
+        reactions={sheet?.reactions}
+        actions={sheet?.actions ?? []}
+        info={sheet?.info}
       />
       {showScrollToBottom && (
         <Animated.View

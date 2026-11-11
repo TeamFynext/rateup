@@ -7,6 +7,7 @@ import type { ProviderJobData } from "../providers/integrationProvider.types.js"
 import { hubSpotOAuthConfig } from "./hubspot.auth.js";
 import { findIntegrationByPortal } from "./hubspot.connect.js";
 import type { HubSpotWebhookEvent } from "./hubspot.types.js";
+import { trimTrailingSlash } from "../../../utils/url.js";
 
 /**
  * HubSpot → RateUp (step 2.4). A HubSpot app sends every connected account's
@@ -70,7 +71,7 @@ export function verifyHubSpotSignature(input: {
 
 /** The URL HubSpot signed: the public API address plus the path it posted to. */
 export function signedUrl(path: string) {
-  return `${process.env.API_URL ?? ""}${path}`;
+  return `${trimTrailingSlash(process.env.API_URL)}${path}`;
 }
 
 function objectTypeOf(subscriptionType: string): HubSpotObjectType | null {

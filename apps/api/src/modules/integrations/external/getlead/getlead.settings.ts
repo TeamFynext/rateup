@@ -1,5 +1,5 @@
 import prisma from "../../../../utils/prisma.js";
-import { LEADS_PIPELINE_TYPE } from "../../../pipeline/pipelineTypes.js";
+import { LEADS_PIPELINE_TYPE } from "../../../pipelines/pipelineTypes.js";
 import { IntegrationConnectError } from "../../shared/oauthConnectError.js";
 import { getGetLeadIntegration, mergeGetLeadCredential } from "./getlead.credential.js";
 import { getGetLeadCredential, type GetLeadCredential } from "./getlead.types.js";

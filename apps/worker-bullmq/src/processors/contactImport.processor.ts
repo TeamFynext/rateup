@@ -6,7 +6,7 @@ import { Job, Worker } from "bullmq";
 
 import { log } from "@rateup/api/workers/shared/logger.js";
 import baseRedis from "@rateup/api/utils/redisConnection.js";
-import { runContactImport } from "@rateup/api/modules/contact/contactImport.service.js";
+import { runContactImport } from "@rateup/api/modules/contacts/contactImport.service.js";
 import type {
   ContactImportJobData,
   ContactImportProgress,

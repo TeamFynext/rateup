@@ -9,10 +9,10 @@ vi.mock("../../../utils/logger.js", () => ({
   log: { error: vi.fn(), info: vi.fn(), trace: vi.fn(), warn: vi.fn() },
 }));
 vi.mock("../accounts/account.service.js", () => ({ assignRewardToCustomer: vi.fn() }));
-vi.mock("../../whatsapp/wa_axios.js", () => ({
+vi.mock("../../meta/whatsapp/wa_axios.js", () => ({
   GraphApiError: class GraphApiError extends Error {},
 }));
-vi.mock("../../whatsapp/wa_error_handler.js", () => ({ getGraphApiErrorMessage: vi.fn() }));
+vi.mock("../../meta/whatsapp/wa_error_handler.js", () => ({ getGraphApiErrorMessage: vi.fn() }));
 vi.mock("./feedback.service.js", () => ({
   FeedbackError: class FeedbackError extends Error {
     constructor(

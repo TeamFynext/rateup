@@ -49,7 +49,11 @@ const program: ReminderProgram = {
   tierQualificationWindowMonths: 12,
 };
 const trigger: ReminderTrigger = { rewardId: null, leadDays: null, sendHour: null };
-const contact = { name: "Ann", phone: "919000000001", orgId: ORG };
+const contact = {
+  name: "Ann",
+  identities: [{ kind: "PHONE", value: "919000000001" }],
+  orgId: ORG,
+};
 
 const sendFails = () =>
   (sendLoyaltyEvent as Mock).mockResolvedValue({ sent: false, skippedReason: "send_failed" });

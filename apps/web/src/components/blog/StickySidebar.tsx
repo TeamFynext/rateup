@@ -109,7 +109,7 @@ export default function StickySidebar() {
 
           {/* Woman photo — z-index 3 */}
           <img
-            src={`${import.meta.env.VITE_CLOUDFRONT_WEB_IMAGES_URL}/blog/girlwithphone.png`}
+            src={`${import.meta.env.VITE_WEB_IMAGES_CDN_URL}/blog/girlwithphone.png`}
             alt="Woman smiling while using WhatsApp on her phone"
             className="absolute top-0 left-1/2 -translate-x-[52%] h-[310px] w-auto object-contain object-top z-[3]"
           />

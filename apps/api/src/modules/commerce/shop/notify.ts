@@ -2,17 +2,18 @@ import { PlatformType } from "../../../generated/prisma/client.js";
 import { WaTemplateStatus } from "../../../types/enums.js";
 import { log } from "../../../utils/logger.js";
 import prisma from "../../../utils/prisma.js";
+import { contactFields, primaryIdentities } from "../../contacts/identity/contactFields.js";
 import { findOpenSession } from "../../loyalty/messaging/channels/whatsapp/session.js";
 import { parsePhoneforWa } from "../../loyalty/util.js";
-import { sendTemplateToUserCore } from "../../whatsapp/messageTemplates/wa_templates.controller.js";
-import { sendMetaMessage } from "../../whatsapp/meta/metaMessage.service.js";
+import { sendTemplateToUserCore } from "../../meta/whatsapp/templates/templates.controller.js";
+import { sendMetaMessage } from "../../meta/shared/metaMessage.service.js";
 import {
   createCTAButtonMessage,
   createDocumentMessage,
   createListMessage,
   createReplyButtonsMessage,
   createTextMessage,
-} from "../../whatsapp/whatsappSurvey/wasurvey.utils.js";
+} from "../../meta/whatsapp/webhook/whatsapp.utils.js";
 import type { ShopNotificationEvent, ShopNotificationSettings } from "./shop.types.js";
 
 /**
@@ -56,14 +57,15 @@ async function resolveRecipient(r: ShopRecipient) {
   const contact = r.contactId
     ? await prisma.contact.findUnique({
         where: { id: r.contactId },
-        select: { phone: true, igsId: true, psid: true, lastMessageSourceIdentifier: true },
+        select: { lastMessageSourceIdentifier: true, ...primaryIdentities },
       })
     : null;
+  const ids = contactFields(contact?.identities);
   // The contact's own number wins: an order's phone can be typed by whoever holds its link.
   return {
-    phone: contact?.phone ?? r.phone ?? null,
-    igsId: contact?.igsId ?? null,
-    psid: contact?.psid ?? null,
+    phone: ids.phone ?? r.phone ?? null,
+    igsId: ids.igsId,
+    psid: ids.psid,
     lastSource: contact?.lastMessageSourceIdentifier ?? null,
   };
 }

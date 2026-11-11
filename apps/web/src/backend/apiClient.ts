@@ -111,14 +111,4 @@ const axiosSlowClient = axios.create({
 
 axiosSlowClient.interceptors.response.use((response) => response, interceptorErrorHandler);
 
-const axiosClientIP = axios.create({
-  baseURL: `${import.meta.env.VITE_API_IP}/api`,
-  timeout: 8000,
-  headers: {
-    Accept: "application/json",
-  },
-});
-
-axiosClientIP.interceptors.response.use((_) => _, interceptorErrorHandler);
-
-export { axiosClient, axiosClientIP, axiosSlowClient, shouldSkipLocalErrorToast };
+export { axiosClient, axiosSlowClient, shouldSkipLocalErrorToast };

@@ -1,5 +1,5 @@
 import type { ShopOrder } from "../../../generated/prisma/client.js";
-import { checkPlanLimit, type PlanLimitStatus } from "../../subscription/planLimits.js";
+import { checkPlanLimit, type PlanLimitStatus } from "../../settings/subscription/planLimits.js";
 import { ShopError } from "./shop.errors.js";
 
 /** What a shopper is told when the plan's monthly orders are spent. */

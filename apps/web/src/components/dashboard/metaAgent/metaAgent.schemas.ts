@@ -7,7 +7,7 @@ import {
 } from "@/backend/metaAgent/metaAgent.api";
 
 /**
- * Client-side mirrors of `rateup-api/src/modules/metaAgent/metaAgent.schema.ts`,
+ * Client-side mirrors of `apps/api/src/modules/meta/agent/metaAgent.schema.ts`,
  * which in turn mirrors Meta's own reference. Keeping the two in step is the
  * point: a field the API will reject is caught in the form, against the field,
  * rather than coming back as a toast after a round trip to Meta.

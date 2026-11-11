@@ -22,7 +22,7 @@ vi.mock("./hubspot.contacts.js", async (importOriginal) => ({
   ...(await importOriginal<typeof import("./hubspot.contacts.js")>()),
   hubSpotContactIdFor: vi.fn(),
 }));
-vi.mock("../../response/response.service.js", () => ({
+vi.mock("../../surveys/responses/response.service.js", () => ({
   getFormattedResponse: vi.fn((response: unknown) => String(response)),
 }));
 vi.mock("../../../utils/survey/response.data.js", () => ({

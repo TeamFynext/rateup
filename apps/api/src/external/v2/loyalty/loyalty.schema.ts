@@ -11,8 +11,8 @@ import { memberPhoneSchema, memberRefSchema } from "./memberRef.js";
  * declared a response, so the published docs said nothing about what came back. And,
  * because `fastify-type-provider-zod`'s serializer drops keys a schema does not mention,
  * these are a real boundary rather than documentation: the old handlers sent Prisma rows
- * back whole, so a partner asking for a customer list received `chatbotId`,
- * `lastReceivedMetadata`, `lifecycleId` and every other inbox internal hanging off Contact.
+ * back whole, so a partner asking for a customer list received `lastReceivedMetadata`,
+ * `lifecycleId` and every other inbox internal hanging off Contact.
  *
  * Members are named by phone and card code here, never by id — see `memberRef.ts`.
  */

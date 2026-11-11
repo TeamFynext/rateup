@@ -17,7 +17,7 @@ vi.mock("../../../utils/logger.js", () => ({
 vi.mock("../../../generated/prisma/client.js", () => ({
   TemplateType: { LOYALTY: "LOYALTY" },
 }));
-vi.mock("../../whatsapp/messageTemplates/wa_templates.service.js", () => ({
+vi.mock("../../meta/whatsapp/templates/templates.service.js", () => ({
   createTemplate: vi.fn(),
   editTemplate: vi.fn(),
   fetchTemplate: vi.fn(),
@@ -43,7 +43,7 @@ import {
   getTemplateByNameAndOrgId,
   saveTemplate,
   updateTemplateInDb,
-} from "../../whatsapp/messageTemplates/wa_templates.service.js";
+} from "../../meta/whatsapp/templates/templates.service.js";
 import { saveTriggerBody, upsertTrigger } from "../onboarding/onboarding.service.js";
 import { saveEventMessage } from "./eventMessage.service.js";
 

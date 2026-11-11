@@ -16,7 +16,7 @@ EXPOSE 8081
 # message-dispatcher's setup expects sent → delivered → read; without this a
 # send is answered and nothing follows, so statuses never update and the
 # silence reads as a bug in the app under test rather than a missing flag.
-ENV META_MOCK_STATUS_PROGRESSION=1
+ENV META_MOCK_STATUS_PROGRESSION=true
 
 # Webhooks are delivered back out of the container, so the target has to be
 # reachable from inside it — host.docker.internal on Docker Desktop, the service

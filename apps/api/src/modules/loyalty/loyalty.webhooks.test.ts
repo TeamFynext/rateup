@@ -9,10 +9,10 @@ vi.mock("../../utils/prisma.js", () => ({
 vi.mock("../../utils/logger.js", () => ({
   log: { error: vi.fn(), info: vi.fn(), trace: vi.fn(), warn: vi.fn(), debug: vi.fn() },
 }));
-vi.mock("../webhook/webhook.events.js", () => ({ emitWebhookEvents: vi.fn() }));
+vi.mock("../settings/webhooks/webhook.events.js", () => ({ emitWebhookEvents: vi.fn() }));
 
 import prisma from "../../utils/prisma.js";
-import { emitWebhookEvents, type WebhookEventInput } from "../webhook/webhook.events.js";
+import { emitWebhookEvents, type WebhookEventInput } from "../settings/webhooks/webhook.events.js";
 import {
   announceLoyaltyTransactions,
   loyaltyPointsData,
@@ -59,7 +59,11 @@ beforeEach(() => {
   vi.clearAllMocks();
   emit.mockImplementation(async (events: unknown[]) => events.length);
   db.customerLoyaltyAccount.findMany.mockResolvedValue([
-    { id: "acct-1", cardCode: MEMBER.cardCode, contact: { phone: MEMBER.phone } },
+    {
+      id: "acct-1",
+      cardCode: MEMBER.cardCode,
+      contact: { identities: [{ kind: "PHONE", value: MEMBER.phone }] },
+    },
   ]);
   db.loyaltyProgram.findUnique.mockResolvedValue({ orgId: ORG });
 });

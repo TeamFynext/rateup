@@ -5,9 +5,10 @@ import { useTranslation } from "react-i18next";
 
 import { CampaignRetryStrategy, CampaignSendStatus, CampaignSendTrigger } from "@/types/enums.ts";
 import type { CampaignRetryPolicy, CampaignSend } from "@/types/global";
+import { plainT, type Translate } from "@/utils/translate";
 
 /** "in 19h" — the number people read off this card. */
-export function untilLabel(iso: string, t: (k: string, o?: Record<string, unknown>) => string) {
+export function untilLabel(iso: string, t: Translate) {
   const ms = new Date(iso).getTime() - Date.now();
   if (ms <= 0) return t("any moment now");
   const minutes = Math.round(ms / 60_000);
@@ -108,7 +109,7 @@ export function NextBatchCard({
             minute: "2-digit",
           })}
         >
-          {untilLabel(send.scheduledFor, t)}
+          {untilLabel(send.scheduledFor, plainT(t))}
         </Detail>
         <div className="flex flex-col gap-0.5">
           <span className="text-muted-foreground/70 text-[11.5px]">

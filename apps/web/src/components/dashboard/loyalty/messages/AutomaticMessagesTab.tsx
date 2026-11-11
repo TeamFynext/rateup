@@ -17,6 +17,7 @@ import { useWaTemplates } from "@/backend/whatsapp/whatsapp.query";
 import { SectionHeading } from "@/components/common/page-heading.tsx";
 import { SyncTemplatesButton } from "@/components/whatsapp/templates/SyncTemplates.tsx";
 import { TemplateType } from "@/types/enums.ts";
+import { plainT, type Translate } from "@/utils/translate";
 
 import { useProgramEditorData } from "../onboarding/useProgramEditorData.ts";
 import { LOYALTY_PATHS } from "../paths.ts";
@@ -41,7 +42,7 @@ export function AutomaticMessagesTab() {
   const catalog = useMemo(() => loyaltyEventCatalog(t), [t]);
 
   const saveText = useSaveEventMessageMutation(program?.id, (result) =>
-    toast[result.status === "failed" ? "error" : "success"](describe(t, result)),
+    toast[result.status === "failed" ? "error" : "success"](describe(plainT(t), result)),
   );
 
   const seed = useApplyMessagesStepMutation((result) => {
@@ -241,10 +242,7 @@ export function AutomaticMessagesTab() {
 }
 
 /** One line on what saving did, in the merchant's terms. */
-function describe(
-  t: (key: string, options?: Record<string, unknown>) => string,
-  result: EventTemplateResult,
-) {
+function describe(t: Translate, result: EventTemplateResult) {
   if (result.status === "failed") {
     return result.error
       ? t("Could not submit: {error}", { error: result.error })

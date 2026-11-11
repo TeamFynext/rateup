@@ -1,15 +1,22 @@
-import { storedPhoneSpellings, toWirePhone } from "../phone.js";
 import type { FastifyReply, FastifyRequest } from "fastify";
 
 import type { Prisma } from "../../../generated/prisma/client.js";
+import { ContactIdentityKind, ContactIdentitySource } from "../../../generated/prisma/enums.js";
 import prisma from "../../../utils/prisma.js";
 import { emitIntegrationEvent } from "../../../modules/integrations/events/emitIntegrationEvent.js";
 import {
   createContact,
   createMultipleContacts,
   deleteContactById,
-} from "../../../modules/contact/contact.service.js";
-import type { ContactCore } from "../../../modules/contact/contact.schema.js";
+} from "../../../modules/contacts/contact.service.js";
+import type { ContactCore } from "../../../modules/contacts/contact.schema.js";
+import {
+  contactFields,
+  contactWhereIdentity,
+  contactWhereIdentityContains,
+  setPrimaryIdentities,
+} from "../../../modules/contacts/identity/contactFields.js";
+import { IdentityTakenError } from "../../../modules/contacts/identity/identity.service.js";
 import { ExternalApiError } from "../../shared/errors.js";
 import { cursorOrderBy, cursorWhere, decodeCursor, toPage } from "../pagination.js";
 import { contactSelect, presentContact, presentContactDetail } from "./presenters.js";
@@ -38,13 +45,12 @@ export async function listContactsHandler(
   const { limit, cursor, search, labelId, contactGroupId } = request.query;
   const and: Prisma.ContactWhereInput[] = [cursorWhere(decodeCursor(cursor))];
   if (search) {
-    const digits = search.replace(/\D/g, "");
     and.push({
       OR: [
         { name: { contains: search, mode: "insensitive" } },
-        { email: { contains: search, mode: "insensitive" } },
+        contactWhereIdentityContains(["email"], search),
         // Phones are stored as digits only, so "+91 98765" has to match "9198765…".
-        ...(digits ? [{ phone: { contains: digits } }] : []),
+        contactWhereIdentityContains(["phone"], search),
       ],
     });
   }
@@ -90,28 +96,47 @@ export async function createContactHandler(
   const body = request.body;
   const refs = await resolveContactRefs(orgId, [{ path: "", ...body }]);
 
-  // Answered here so the caller learns which contact it collided with; the unique index
-  // still catches a race, as a plain 409 contact_already_exists from the error handler.
+  // Answered here so the caller learns which contact it collided with; the unique indexes
+  // still catch a race, as a 409 contact_already_exists too.
   const existing = await prisma.contact.findFirst({
     where: {
       orgId,
       OR: [
-        { phone: { in: storedPhoneSpellings(body.phone) } },
+        contactWhereIdentity("phone", body.phone),
         ...(body.externalId ? [{ external_id: body.externalId }] : []),
       ],
     },
-    select: { id: true, phone: true },
+    select: {
+      id: true,
+      identities: {
+        where: { kind: ContactIdentityKind.PHONE, value: body.phone },
+        select: { id: true },
+        take: 1,
+      },
+    },
   });
   if (existing) {
     throw new ExternalApiError(409, "contact_already_exists", "That contact already exists", {
       contactId: existing.id,
-      field: toWirePhone(existing.phone) === body.phone ? "phone" : "externalId",
+      field: existing.identities.length ? "phone" : "externalId",
     });
   }
 
   // The service, not a Prisma insert: a single create runs the org's CONTACT_CREATED
   // automation and integration events, as it always has from this route.
-  const created = await createContact(toContactCore(body, refs, orgId), request.userId);
+  let created: { id: string };
+  try {
+    created = await createContact(toContactCore(body, refs, orgId), request.userId);
+  } catch (error) {
+    // The phone (or the email) is another contact's, found by the service.
+    if (error instanceof IdentityTakenError) {
+      throw new ExternalApiError(409, "contact_already_exists", "That record already exists", {
+        contactId: error.ownerContactId,
+        field: error.kind === ContactIdentityKind.EMAIL ? "email" : "phone",
+      });
+    }
+    throw error;
+  }
   reply.code(201);
   return presentContact(await loadContact(orgId, created.id));
 }
@@ -145,18 +170,25 @@ export async function bulkCreateContactsHandler(
   });
 
   const externalIds = candidates.flatMap((i) => contacts[i]!.externalId ?? []);
-  const existing = await prisma.contact.findMany({
-    where: {
-      orgId,
-      OR: [
-        { phone: { in: candidates.flatMap((i) => storedPhoneSpellings(contacts[i]!.phone)) } },
-        ...(externalIds.length ? [{ external_id: { in: externalIds } }] : []),
-      ],
-    },
-    select: { phone: true, external_id: true },
-  });
-  const takenPhones = new Set(existing.map((e) => toWirePhone(e.phone)));
-  const takenExternalIds = new Set(existing.map((e) => e.external_id));
+  // Phones are identity values (digits only, as the schema hands them on).
+  const [phoneOwners, externalOwners] = await Promise.all([
+    prisma.contactIdentity.findMany({
+      where: {
+        orgId,
+        kind: ContactIdentityKind.PHONE,
+        value: { in: candidates.map((i) => contacts[i]!.phone) },
+      },
+      select: { value: true },
+    }),
+    externalIds.length
+      ? prisma.contact.findMany({
+          where: { orgId, external_id: { in: externalIds } },
+          select: { external_id: true },
+        })
+      : [],
+  ]);
+  const takenPhones = new Set(phoneOwners.map((e) => e.value));
+  const takenExternalIds = new Set(externalOwners.map((e) => e.external_id));
 
   const toCreate = candidates.filter((i) => {
     const c = contacts[i]!;
@@ -176,19 +208,18 @@ export async function bulkCreateContactsHandler(
       )
     : [];
 
-  // Anything we sent that did not come back lost a race to a concurrent insert.
-  const createdPhones = new Set(created.map((c) => c.phone));
-  for (const i of toCreate) {
-    if (!createdPhones.has(contacts[i]!.phone)) skip(i, "already_exists");
-  }
-
   const rows = created.length
     ? await prisma.contact.findMany({
         where: { orgId, id: { in: created.map((c) => c.id) } },
         select: contactSelect,
       })
     : [];
-  const byPhone = new Map(rows.map((r) => [r.phone, r]));
+  const byPhone = new Map(rows.map((r) => [contactFields(r.identities).phone, r]));
+
+  // Anything we sent that did not come back lost a race to a concurrent insert.
+  for (const i of toCreate) {
+    if (!byPhone.has(contacts[i]!.phone)) skip(i, "already_exists");
+  }
 
   skipped.sort((a, b) => a.index - b.index);
   return {
@@ -220,13 +251,27 @@ export async function updateContactHandler(
   const updated = await prisma.$transaction(async (tx) => {
     const row = await tx.contact.update({
       where: { id: contactId, orgId },
-      data: {
-        name: body.name,
-        phone: body.phone,
-        email: body.email,
-        external_id: body.externalId,
-      },
+      data: { name: body.name, external_id: body.externalId },
     });
+    if (body.phone !== undefined || body.email !== undefined) {
+      try {
+        await setPrimaryIdentities(
+          orgId,
+          contactId,
+          { phone: body.phone, email: body.email },
+          ContactIdentitySource.IMPORT,
+          tx,
+        );
+      } catch (error) {
+        if (error instanceof IdentityTakenError) {
+          throw new ExternalApiError(409, "contact_already_exists", "That record already exists", {
+            contactId: error.ownerContactId,
+            field: error.kind === ContactIdentityKind.EMAIL ? "email" : "phone",
+          });
+        }
+        throw error;
+      }
+    }
 
     if (body.labels) {
       await tx.contactLabelMap.deleteMany({ where: { contactId } });
@@ -252,7 +297,12 @@ export async function updateContactHandler(
       if (values.length) await tx.contactCustomFieldValue.createMany({ data: values });
     }
 
-    return row;
+    // The identities as they are now, for the event.
+    const identities = await tx.contactIdentity.findMany({
+      where: { contactId, isPrimary: true },
+      select: { kind: true, value: true },
+    });
+    return { ...row, ...contactFields(identities) };
   });
 
   await emitIntegrationEvent(orgId, {

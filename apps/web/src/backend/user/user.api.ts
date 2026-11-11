@@ -212,7 +212,7 @@ export interface AuditLogFilters {
   from?: Date;
   to?: Date;
   userId?: string;
-  /** A feature key from `getAuditLogFeatures`, e.g. `contact` or `wa/inbox`. */
+  /** A feature key from `getAuditLogFeatures`, e.g. `contacts` or `automation/rules`. */
   feature?: string;
 }
 

@@ -2,6 +2,7 @@ import dayjs from "dayjs";
 import { google } from "googleapis";
 
 import prisma from "../../../utils/prisma.js";
+import { contactFields, primaryIdentities } from "../../contacts/identity/contactFields.js";
 import { IntegratedApps, PageType, QuestionType, WaQuestions } from "../../../types/enums.js";
 import { getContent } from "../../../utils/survey/response.data.js";
 import { getIntegrationByName, updateIntegrationByName } from "../integrations.service.js";
@@ -10,9 +11,9 @@ import {
   getCellData,
   getFormattedResponse,
   toCell,
-} from "../../response/response.service.js";
-import { saveSheetIdToSurvey } from "../../survey/survey.service.js";
-import { getFlowBySurveyId } from "../../whatsapp/flows/flow.service.js";
+} from "../../surveys/responses/response.service.js";
+import { saveSheetIdToSurvey } from "../../surveys/survey.service.js";
+import { getFlowBySurveyId } from "../../meta/whatsapp/flows/flow.service.js";
 import { googleClientFor, readGoogleSheetCredential } from "./googlesheet.auth.js";
 import {
   CREATED_AT,
@@ -143,7 +144,7 @@ export async function syncResponseToGoogleSheet(surveyId: string, orgId: string)
                 team: { select: { name: true } },
               },
             },
-            Contact: { select: { phone: true } },
+            Contact: { select: primaryIdentities },
           },
           orderBy: { createdAt: "asc" },
           skip,
@@ -174,7 +175,7 @@ export async function syncResponseToGoogleSheet(surveyId: string, orgId: string)
                   ([key, value]) =>
                     (resObj[(qstnTitle + ":" + key).trim()] =
                       key == "photo"
-                        ? `https://${process.env.AWS_CLOUDFRONT_DOMAIN}/${value}`
+                        ? `https://${process.env.MEDIA_CDN_DOMAIN}/${value}`
                         : toCell(value)),
                 );
               else if (q.type === QuestionType.MCQGrid)
@@ -188,7 +189,9 @@ export async function syncResponseToGoogleSheet(surveyId: string, orgId: string)
               else resObj[qstnTitle] = getFormattedResponse(answerValue, q, lang);
             }
           }
-          resObj["Respondent's Mobile Number"] = toCell(response?.Contact?.phone);
+          resObj["Respondent's Mobile Number"] = toCell(
+            contactFields(response?.Contact?.identities).phone,
+          );
           resObj["Tag"] = toCell(response?.tag);
           responseForSheet.push(resObj);
         }
@@ -227,7 +230,7 @@ export async function syncResponseToGoogleSheet(surveyId: string, orgId: string)
       const responses = await prisma.surveyResponse.findMany({
         where: { surveyTeamMap: { surveyId } },
         include: {
-          Contact: { select: { phone: true } },
+          Contact: { select: primaryIdentities },
           surveyTeamMap: {
             select: {
               teamId: true,
@@ -257,7 +260,7 @@ export async function syncResponseToGoogleSheet(surveyId: string, orgId: string)
             const createdAtFormatted = dayjs(response.createdAt).format("DD-MM-YYYY HH:mm");
             responseValue = createdAtFormatted;
           } else if (question === RESPONDENT) {
-            responseValue = response?.Contact?.phone || "";
+            responseValue = contactFields(response?.Contact?.identities).phone || "";
           } else if (question === TAG) {
             responseValue = response.tag || "";
           } else if (question === TEAM) {

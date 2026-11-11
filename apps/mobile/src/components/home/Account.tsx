@@ -12,6 +12,7 @@ import { Colors } from "@/constants/colors";
 import { pendingCashierWrites } from "@/utils/clearLocalData";
 import { roleLabelOf } from "@/hooks/usePermissions";
 import StatusRow from "./StatusPicker";
+import { mediaUrl } from "@/utils/cdn";
 
 interface UserProfile {
   email: string;
@@ -127,7 +128,7 @@ const AccountBar = ({
               {profilePhoto ? (
                 <Image
                   source={{
-                    uri: `${process.env.EXPO_PUBLIC_AWS_CLOUDFRONT_URL}${profilePhoto}`,
+                    uri: mediaUrl(profilePhoto),
                   }}
                   className="w-full h-full"
                 />

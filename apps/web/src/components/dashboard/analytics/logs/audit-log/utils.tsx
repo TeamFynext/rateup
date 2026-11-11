@@ -19,8 +19,11 @@ interface ParsedRoute {
 }
 
 // Constants
+// Most features sit one segment under /api/; a few group theirs under a second segment
+// (`/api/automation/rules`, `/api/whatsapp/templates`), and audiences sit under contacts.
 const ROUTE_PATTERNS = {
-  WA: /\/api\/wa\/([^/]+)(?:\/([^/]+))?/,
+  AUDIENCES: /\/api\/(contacts\/audiences)(?:\/([^/]+))?/,
+  GROUPED: /\/api\/(?:whatsapp|automation|instagram|messenger)\/([^/]+)(?:\/([^/]+))?/,
   GENERAL: /\/api\/([^/]+)(?:\/([^/]+))?/,
 } as const;
 
@@ -33,12 +36,14 @@ const ACTION_LABELS: Record<string, string> = {
 } as const;
 
 const RESOURCE_TYPE_MAPPINGS: Record<string, string> = {
-  contact: "Contact",
-  "contact-group": "Audience",
-  "automated-reply": "Rule",
-  chatbots: "Journey",
-  "wa-template": "WA Template",
-  campaign: "Campaign",
+  contacts: "Contact",
+  "contacts/audiences": "Audience",
+  rules: "Rule",
+  journeys: "Journey",
+  templates: "WhatsApp template",
+  campaigns: "Campaign",
+  teams: "Team",
+  surveys: "Survey",
   user: "User",
   organization: "Organization",
 } as const;
@@ -73,30 +78,33 @@ const parseRoute = (route: string): ParsedRoute => {
 
 // Routes that deserve a plain-English label instead of the generic
 // "<Resource> <action>" derived from the URL. Channel connect/disconnect lives
-// under /settings and /auth, which would otherwise read as "Settings created".
+// under /whatsapp/settings and /whatsapp/auth, which would otherwise read as "Settings created".
 const ROUTE_OVERRIDES: { method: string; pattern: RegExp; label: string }[] = [
-  // Rules live under the old `automated-reply` API path; journeys under `chatbots`.
-  { method: "POST", pattern: /^\/api\/wa\/automated-reply\/rule\/?$/, label: "Rule created" },
-  { method: "PUT", pattern: /^\/api\/wa\/automated-reply\/rule\/[^/]+\/?$/, label: "Rule updated" },
+  { method: "POST", pattern: /^\/api\/automation\/rules\/?$/, label: "Rule created" },
+  { method: "PUT", pattern: /^\/api\/automation\/rules\/[^/]+\/?$/, label: "Rule updated" },
+  { method: "PATCH", pattern: /^\/api\/automation\/rules\/[^/]+\/?$/, label: "Rule updated" },
+  { method: "DELETE", pattern: /^\/api\/automation\/rules\/[^/]+\/?$/, label: "Rule deleted" },
+  { method: "POST", pattern: /^\/api\/automation\/journeys\/?$/, label: "Journey created" },
+  { method: "PUT", pattern: /^\/api\/automation\/journeys\/[^/]+\/?$/, label: "Journey updated" },
   {
     method: "PATCH",
-    pattern: /^\/api\/wa\/automated-reply\/rule\/[^/]+\/?$/,
-    label: "Rule updated",
+    pattern: /^\/api\/automation\/journeys\/[^/]+\/?$/,
+    label: "Journey updated",
   },
   {
     method: "DELETE",
-    pattern: /^\/api\/wa\/automated-reply\/rule\/[^/]+\/?$/,
-    label: "Rule deleted",
+    pattern: /^\/api\/automation\/journeys\/[^/]+\/?$/,
+    label: "Journey deleted",
   },
-  { method: "POST", pattern: /^\/api\/chatbots\/?$/, label: "Journey created" },
-  { method: "PUT", pattern: /^\/api\/chatbots\/[^/]+\/?$/, label: "Journey updated" },
-  { method: "PATCH", pattern: /^\/api\/chatbots\/[^/]+\/?$/, label: "Journey updated" },
-  { method: "DELETE", pattern: /^\/api\/chatbots\/[^/]+\/?$/, label: "Journey deleted" },
-  { method: "POST", pattern: /^\/api\/wa\/settings\/?$/, label: "Channel added" },
-  { method: "PUT", pattern: /^\/api\/wa\/settings\/?$/, label: "Channel updated" },
-  { method: "POST", pattern: /^\/api\/wa\/auth\/register\/?$/, label: "Channel added" },
-  { method: "DELETE", pattern: /^\/api\/wa\/settings\/[^/]+\/?$/, label: "Channel removed" },
-  { method: "POST", pattern: /^\/api\/wa\/auth\/deregister\/[^/]+\/?$/, label: "Channel removed" },
+  { method: "POST", pattern: /^\/api\/whatsapp\/settings\/?$/, label: "Channel added" },
+  { method: "PUT", pattern: /^\/api\/whatsapp\/settings\/?$/, label: "Channel updated" },
+  { method: "POST", pattern: /^\/api\/whatsapp\/auth\/register\/?$/, label: "Channel added" },
+  { method: "DELETE", pattern: /^\/api\/whatsapp\/settings\/[^/]+\/?$/, label: "Channel removed" },
+  {
+    method: "POST",
+    pattern: /^\/api\/whatsapp\/auth\/deregister\/[^/]+\/?$/,
+    label: "Channel removed",
+  },
 ];
 
 const matchRouteOverride = (method: string, route: string): string | null => {
@@ -125,25 +133,26 @@ const formatActionMessage = (method: string, route: string): string => {
 
 // Filter option names for route features; anything else is title-cased from its path.
 const FEATURE_LABELS: Record<string, string> = {
-  contact: "Contacts",
-  "contact-group": "Audiences",
-  pipeline: "Pipeline",
+  contacts: "Contacts",
+  inbox: "Inbox",
+  campaigns: "Campaigns",
+  pipelines: "Pipeline",
   loyalty: "Loyalty",
-  survey: "Surveys",
+  surveys: "Surveys",
   user: "Users",
   org: "Organization",
-  team: "Teams",
-  "wa/inbox": "Inbox",
-  "wa/template": "WhatsApp templates",
-  "wa/campaign": "Campaigns",
-  "wa/settings": "Channels",
-  "wa/automated-reply": "Automation rules",
-  chatbots: "Journeys",
+  teams: "Teams",
+  "whatsapp/templates": "WhatsApp templates",
+  "whatsapp/flows": "WhatsApp flows",
+  "whatsapp/settings": "Channels",
+  "whatsapp/auth": "Channels",
+  "automation/rules": "Rules",
+  "automation/journeys": "Journeys",
 };
 
-/** A feature key from the log (`contact`, `wa/inbox`) as a filter option name. */
+/** A feature key from the log (`contacts`, `automation/rules`) as a filter option name. */
 export const featureLabel = (key: string): string =>
-  FEATURE_LABELS[key] ?? formatResourceType(key.replace(/^wa\//, ""));
+  FEATURE_LABELS[key] ?? formatResourceType(key.replace(/^(?:whatsapp|automation)\//, ""));
 
 const formatTimestamp = (timestamp: string): string => {
   return dayjs(timestamp).format("YYYY-MM-DD HH:mm:ss");

@@ -146,7 +146,7 @@ describe("suggestPointsCost", () => {
 /**
  * The API's starter packs were hand-priced to ~3% before this function existed. Reproducing
  * them is the strongest evidence the formula is right, so they are the oracle — mirrored by
- * hand from `rateup-api/src/modules/loyalty/onboarding/presets.ts`.
+ * hand from `apps/api/src/modules/loyalty/onboarding/presets.ts`.
  */
 describe("reproduces the hand-tuned preset prices", () => {
   const PRESETS: ReadonlyArray<[string, number, string, unknown, number]> = [

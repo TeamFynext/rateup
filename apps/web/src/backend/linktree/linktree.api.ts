@@ -4,7 +4,7 @@ import type { RequestPayload } from "@/types/api.ts";
 
 import { axiosClient } from "../apiClient";
 
-const url = "/linktrees";
+const url = "/link-pages";
 
 /** A single link row on a linktree page, as the endpoint stores and returns it. */
 export interface LinktreeLink {

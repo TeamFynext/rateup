@@ -51,4 +51,4 @@ export interface Report {
   blocks: ReportBlock[];
 }
 
-export type Translate = (key: string, values?: Record<string, unknown>) => string;
+export type { Translate } from "@/utils/translate";

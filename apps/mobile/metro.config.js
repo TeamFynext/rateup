@@ -4,15 +4,14 @@ const { withNativeWind } = require("nativewind/metro");
 
 const config = getDefaultConfig(__dirname);
 
-// Shared monorepo packages (`link:` dependencies, e.g. @rateup/utils) live outside this app,
-// which is its own pnpm install; Metro only watches the project folder unless told otherwise.
-const { dependencies } = require("./package.json");
-config.watchFolders = [
-  ...config.watchFolders,
-  ...Object.values(dependencies)
-    .filter((spec) => spec.startsWith("link:"))
-    .map((spec) => path.resolve(__dirname, spec.slice("link:".length))),
-];
+// Inside the pnpm workspace, getDefaultConfig watches the root node_modules and every workspace
+// package. The other apps (api, web, ...) are never imported here, so leave them out: watching
+// them only slows Metro's crawl.
+const workspaceRoot = path.resolve(__dirname, "../..");
+config.watchFolders = config.watchFolders.filter((folder) => {
+  const relative = path.relative(workspaceRoot, folder);
+  return !relative.startsWith("apps" + path.sep) || folder === __dirname;
+});
 
 config.transformer.babelTransformerPath = require.resolve("react-native-svg-transformer");
 

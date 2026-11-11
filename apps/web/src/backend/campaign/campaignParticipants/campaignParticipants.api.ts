@@ -22,12 +22,12 @@ import { axiosClient } from "../../apiClient";
 type CampaignPayload = { data: RequestPayload; campaignId: string };
 
 export const addContactParticipants = async ({ data, campaignId }: CampaignPayload) => {
-  const res = await axiosClient.post(`/campaign/${campaignId}/participants/contacts`, data);
+  const res = await axiosClient.post(`/campaigns/${campaignId}/participants/contacts`, data);
   return res;
 };
 
 export const addGroupParticipants = async ({ data, campaignId }: CampaignPayload) => {
-  const res = await axiosClient.post(`/campaign/${campaignId}/participants/groups`, data);
+  const res = await axiosClient.post(`/campaigns/${campaignId}/participants/groups`, data);
   return res;
 };
 
@@ -49,7 +49,7 @@ export const getCampaignParticipants = async (
 ) => {
   const filter = columnFilters.map((data) => `&${data.id}=${toText(data.value)}`).join("&");
   const desc = !Array.isArray(sort) && sort.desc ? "desc" : "asc";
-  const url = `/campaign/${campaignId}/participants?page=${pagination.pageIndex}&limit=${pagination.pageSize}&search=${search}&desc=${desc}${filter}${selectedDripStage ? `&selectedDripStage=${selectedDripStage}` : ""}`;
+  const url = `/campaigns/${campaignId}/participants?page=${pagination.pageIndex}&limit=${pagination.pageSize}&search=${search}&desc=${desc}${filter}${selectedDripStage ? `&selectedDripStage=${selectedDripStage}` : ""}`;
   const res = await axiosClient.get(url);
   return res?.data as {
     participants: CampaignParticipant[];
@@ -59,7 +59,7 @@ export const getCampaignParticipants = async (
 };
 
 export const addCampaignParticipants = async ({ data, campaignId }: CampaignPayload) => {
-  const res = await axiosClient.post(`/campaign/${campaignId}/participants/`, data);
+  const res = await axiosClient.post(`/campaigns/${campaignId}/participants/`, data);
   return res;
 };
 
@@ -70,7 +70,7 @@ export const deleteCampaignParticipant = async ({
   participantId: string;
   campaignId: string;
 }) => {
-  const res = await axiosClient.delete(`/campaign/${campaignId}/participants/${participantId}`);
+  const res = await axiosClient.delete(`/campaigns/${campaignId}/participants/${participantId}`);
   return res;
 };
 export const deleteMulitpleGroupParticipants = async ({
@@ -80,7 +80,7 @@ export const deleteMulitpleGroupParticipants = async ({
   data: string[];
   campaignId: string;
 }) => {
-  const res = await axiosClient.delete(`/campaign/${campaignId}/participants/multiple-delete`, {
+  const res = await axiosClient.delete(`/campaigns/${campaignId}/participants/multiple-delete`, {
     data: { ids: data },
   });
   return res?.data;

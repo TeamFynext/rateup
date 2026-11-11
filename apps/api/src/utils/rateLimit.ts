@@ -2,6 +2,7 @@ import { FastifyReply, FastifyRequest } from "fastify";
 import connection from "./redisConnection.js";
 import { log } from "./logger.js";
 import { clientIp } from "./http.js";
+import { envFlag } from "./envFlag.js";
 
 export interface RateLimitOptions<R extends FastifyRequest = FastifyRequest> {
   /** How many requests one bucket may make inside the window. */
@@ -34,7 +35,7 @@ export interface RateLimitOptions<R extends FastifyRequest = FastifyRequest> {
 
 /** Read at call time, not import time, so a test or a hot env change is seen. */
 function failClosedDisabled(): boolean {
-  return process.env.RATE_LIMIT_FAIL_CLOSED_DISABLED === "true";
+  return envFlag("RATE_LIMIT_FAIL_CLOSED_DISABLED");
 }
 
 /**

@@ -24,7 +24,7 @@ import { LifecycleSelector } from "./LifecycleSelector.tsx";
  * Label, stage, source and custom-field filters for a contact picker, shared by "Add existing
  * contacts" on a group and the campaign audience picker.
  *
- * Every key is one the contacts list endpoint reads (`GET /contact`), so the filtering is done
+ * Every key is one the contacts list endpoint reads (`GET /contacts`), so the filtering is done
  * by the server, and `toContactListQuery` turns the same state into the body an "add all
  * matching" call sends — the server resolves it with the very where clause the list used.
  */

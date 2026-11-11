@@ -3,7 +3,7 @@ import {
   getSurveyListExternalController,
   getSurveyResponsesExternalController,
 } from "./surveys.external.controller.js";
-import { campaignResponseByIdSchema } from "../../../modules/campaign/campaign.schema.js";
+import { campaignResponseByIdSchema } from "../../../modules/campaigns/campaign.schema.js";
 import {
   getResponsesBySurveyParamsSchema,
   getSurveyListResponseSchema,

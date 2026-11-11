@@ -45,7 +45,7 @@ const activeAccount = (over: Record<string, unknown> = {}) => ({
   status: "active",
   cardCode: CODE,
   cardSentAt: null,
-  contact: { name: "Ann", phone: "919000000001" },
+  contact: { name: "Ann", identities: [{ kind: "PHONE", value: "919000000001" }] },
   program: { name: "Cafe Rio Rewards", currencyName: "Beans", status: "active" },
   ...over,
 });

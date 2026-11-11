@@ -86,7 +86,7 @@ code runs everywhere:
 **Status progression is opt-in and deterministic.** The old one ran on every
 send and failed 20% of them at random — realistic, but untestable, since a test
 could not tell its own bug from the mock's dice. Turn it on with
-`META_MOCK_STATUS_PROGRESSION=1`, and set `failureRate` if you want failures:
+`META_MOCK_STATUS_PROGRESSION=true`, and set `failureRate` if you want failures:
 
 ```js
 const mock = await startMetaMock({
@@ -334,16 +334,16 @@ segment. Matching only one spelling leaves every Instagram path with an extra
 | `PORT` | `8081` |
 | `META_MOCK_HOST` | `127.0.0.1` |
 | `META_MOCK_WEBHOOK_URL` | `http://localhost:3001/api/wa/webhook` |
-| `META_MOCK_APP_SECRET` | unset; the app's `waclient_secret`. Webhooks are signed with `X-Hub-Signature-256` like Meta's — without it rateup-api refuses them 401 |
+| `META_MOCK_APP_SECRET` | unset; the app's `META_APP_SECRET`. Webhooks are signed with `X-Hub-Signature-256` like Meta's — without it rateup-api refuses them 401 |
 | `META_MOCK_DEFAULT_API` | `whatsapp` — which API wins on shared endpoints |
-| `META_MOCK_STATUS_PROGRESSION` | unset; `1` fires sent → delivered → read after each send |
+| `META_MOCK_STATUS_PROGRESSION` | unset; `true` fires sent → delivered → read after each send |
 | `META_MOCK_WABA_ID` | stamped onto status callbacks so the app resolves the tenant |
 | `META_MOCK_PHONE_NUMBER_ID` | the same |
 | `META_MOCK_FAILURE_RATE` | `0`; the fraction of sends that fail after `sent` |
 | `META_MOCK_SEND_ERROR` | unset; a Graph error code (e.g. `131042`) every send is refused with |
 | `META_MOCK_SEND_ERROR_RATE` | `0`; the fraction of sends refused with a random error (never 131042) |
 | `META_MOCK_SEND_ERROR_CODES` | unset; comma-separated codes the random errors draw from |
-| `META_MOCK_VERBOSE` | unset; `1` logs every request and which layer answered |
+| `META_MOCK_VERBOSE` | unset; `true` logs every request and which layer answered |
 
 ## Tests
 

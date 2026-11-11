@@ -7,7 +7,7 @@
 // increment, so those *are* summed.
 import { Queue, type Worker } from "bullmq";
 import type { Redis } from "ioredis";
-import { Counter, Gauge } from "prom-client";
+import { Counter, Gauge } from "@prometheus-io/client";
 
 import { log } from "../shared/logger.js";
 import type { HealthCheckResult } from "../shared/healthServer.js";

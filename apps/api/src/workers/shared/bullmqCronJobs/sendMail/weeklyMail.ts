@@ -150,7 +150,7 @@ async function fetchWeeklyConversationStatsByOrg() {
 
       WHERE u.active = TRUE
         -- A suspended account should not get a cheerful weekly summary of a product
-        -- it cannot currently use (src/modules/org/orgSuspension.ts).
+        -- it cannot currently use (src/modules/settings/org/orgSuspension.ts).
         AND o."suspendedAt" IS NULL
 
       GROUP BY o.id, o.name, u.email

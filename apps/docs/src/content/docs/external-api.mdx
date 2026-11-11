@@ -1,6 +1,6 @@
 ---
 title: "External API"
-description: Call RateUp from your own systems — API keys and access, the v2 endpoints with examples, errors, retries, and moving off v1.
+description: Call RateUp from your own systems — API keys and access, the v2 endpoints with examples, the MCP server for AI assistants, errors, retries, and moving off v1.
 ---
 
 import { Step, Steps } from "fumadocs-ui/components/steps";
@@ -956,6 +956,72 @@ is `{ "sent": false, "skippedReason": "session_closed" }` rather than an error.
 
 ---
 
+## MCP Server
+
+The v2 API is also an [MCP](https://modelcontextprotocol.io) server, so an AI assistant — Claude Code,
+Cursor, VS Code, or any MCP client that can send a custom header — can look up contacts, fill audiences, award
+points or send a template for you, using the same API key.
+
+| | |
+|---|---|
+| URL | `https://api.rateup.app/api/external/v2/mcp` |
+| Transport | Streamable HTTP (stateless; no server-sent stream) |
+| Auth | `Authorization: Bearer rk_live_…` — a **v2** key |
+
+<Steps>
+<Step>
+### Create a key for the assistant
+
+In **Settings → Integrations → API Service**, create a v2 key just for the assistant. Give it
+**Only selected features** with what it needs — a read-only Contacts key is a good start. A
+**test** key works too and cannot send paid WhatsApp messages.
+</Step>
+<Step>
+### Add the server to your client
+
+Claude Code:
+
+```bash
+claude mcp add --transport http rateup https://api.rateup.app/api/external/v2/mcp \
+  --header "Authorization: Bearer $RATEUP_API_KEY"
+```
+
+Clients configured with JSON (Cursor, VS Code and others; the exact key names vary a little):
+
+```json
+{
+  "mcpServers": {
+    "rateup": {
+      "type": "http",
+      "url": "https://api.rateup.app/api/external/v2/mcp",
+      "headers": { "Authorization": "Bearer rk_live_…" }
+    }
+  }
+}
+```
+</Step>
+</Steps>
+
+**Each tool is one v2 endpoint** — `contacts_list`, `contacts_lookup`, `audiences_add_contacts`,
+`campaigns_send`, `templates_send`, `loyalty_award_points` and so on. A tool takes the endpoint's
+path and query parameters as arguments, its JSON body as `body`, and on writes an optional
+`idempotencyKey`. It answers with exactly what the endpoint answers, errors included.
+
+- **The key's features decide the tools.** The assistant is offered only the tools its key may
+  call; a test key is not offered the paid sends.
+- **Everything else is the REST API's.** Rate limits, plan requirements, validation, the error
+  envelope and idempotency all apply unchanged, and calls show in the key's usage like any other.
+- **Writes are real.** An assistant that is allowed to delete, merge or send will do it. Most
+  clients ask before running a tool that changes data; keep that on, and scope the key to what
+  you want the assistant to touch.
+- **Sign-in-only clients are not supported yet.** The server authenticates with the key header;
+  clients that connect only through an OAuth sign-in (for example web connectors that offer no
+  header field) cannot use it.
+- `POST /wa/templates/send-with-file` is not offered: it takes a file upload, which tools cannot
+  pass. Send media templates with a header link through `templates_send` instead.
+
+---
+
 ## Webhooks
 
 The API is for actions; webhooks tell you what happened. There is **one webhook per
@@ -1131,6 +1197,8 @@ Once it is live on a **Live** v2 key, **revoke the v1 key**.
 | `422 contact_limit_reached` | The month's active-contact allowance is used up | See [Billing](/settings/billing) |
 | `429 rate_limited` | Over a per-minute or per-hour ceiling | Back off and retry with the same key |
 | The usage chart shows nothing | Calls are made with a different organisation's key | Check the key's prefix in the keys table |
+| The MCP client says it needs to sign in, or shows no tools | No `Authorization` header in its config, or a v1 key | Add the header with a v2 `rk_` key |
+| An MCP tool you expected is missing | The key's features do not cover it, or it is a paid send and the key is a test key | Add the feature to the key, or use a live key |
 | Webhook signatures never verify | The body was parsed and re-serialised, or the secret was trimmed or decoded | Sign `<t>.<raw body>` with the whole `whsec_…` string — see [Verify the signature](/settings/integrations#verify-the-signature) |
 
 ---

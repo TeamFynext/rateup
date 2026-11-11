@@ -1,7 +1,6 @@
-import { WHATSAPP_URL } from "..";
 import { axiosClient } from "../../apiClient";
 
-const CallsUrl = `${WHATSAPP_URL}/calls`;
+const CallsUrl = "/inbox/calls";
 
 export type CallDirection = "USER_INITIATED" | "BUSINESS_INITIATED";
 export type CallStatus = "RINGING" | "ACCEPTED" | "REJECTED" | "COMPLETED" | "MISSED" | "FAILED";

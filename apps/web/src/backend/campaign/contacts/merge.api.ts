@@ -2,8 +2,8 @@ import { axiosClient } from "../../apiClient";
 import { CONTACT_BASE_URL } from "./contacts.api";
 
 /**
- * Contact merge and identities. Mirrors `rateup-api/src/modules/contact/merge/merge.route.ts`
- * (`/api/contact/merge`, `/api/contact/identities`). The axios base URL already ends in `/api`.
+ * Contact merge and identities. Mirrors `apps/api/src/modules/contacts/merge/merge.route.ts`
+ * (`/api/contacts/merge`, `/api/contacts/identities`). The axios base URL already ends in `/api`.
  */
 
 export type IdentityKind =

@@ -25,6 +25,7 @@ import {
   IconChartBar,
   IconFileText,
   IconFileDownload,
+  IconMessageReply,
   IconPencil,
   IconPlayerPause,
   IconPlayerPlay,
@@ -34,7 +35,7 @@ import {
   IconUsers,
 } from "@tabler/icons-react";
 import { useQueryClient } from "@tanstack/react-query";
-import { useNavigate, useParams } from "@tanstack/react-router";
+import { Link, useNavigate, useParams } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
@@ -416,6 +417,15 @@ export function CampaignDetails() {
                   the same control the campaigns list carries, so it looks and
                   behaves the same on both screens. */}
             <RefreshButton onClick={() => void refresh()} isLoading={isRefreshing} />
+            {/* Opens the inbox filtered to this campaign's tickets the customer
+                replied in; the filter bar there widens it to every recipient. */}
+            <Button
+              variant="ghost"
+              render={<Link to="/dashboard/inbox" search={{ tab: "all", campaignId }} />}
+            >
+              <IconMessageReply className="size-4" aria-hidden />
+              {t("View replies")}
+            </Button>
             <Button variant="ghost" onClick={() => openEditCampaign(campaignQuery.data)}>
               <IconPencil className="size-4" aria-hidden />
               {t("Edit")}

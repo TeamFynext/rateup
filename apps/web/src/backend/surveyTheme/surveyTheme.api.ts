@@ -1,7 +1,7 @@
 import { axiosClient } from "../apiClient";
 import type { SurveyTheme } from "./surveyTheme.types";
 
-const THEME_API_PATH = "/surveyTheme";
+const THEME_API_PATH = "/surveys/themes";
 
 export const getSurveyTheme = async (surveyThemeId: string) => {
   const response = await axiosClient.get(`${THEME_API_PATH}/${surveyThemeId}`);

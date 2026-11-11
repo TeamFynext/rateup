@@ -31,6 +31,17 @@ const CONTACTS = [
 
 type Where = Record<string, any>;
 
+/** Phones are the contacts' primary PHONE identities. */
+interface IdentityRow {
+  contactId: string;
+  orgId: string;
+  kind: string;
+  value: string;
+}
+const phoneIdentities = (): IdentityRow[] =>
+  CONTACTS.map((c) => ({ contactId: c.id, orgId: c.orgId, kind: "PHONE", value: c.phone }));
+let identities: IdentityRow[] = [];
+
 vi.mock("../../../utils/prisma.js", () => ({
   default: {
     contactGroup: {
@@ -40,16 +51,17 @@ vi.mock("../../../utils/prisma.js", () => ({
       deleteMany: vi.fn(),
     },
     contact: { findMany: vi.fn() },
+    contactIdentity: { findMany: vi.fn() },
     contactCustomField: { findMany: vi.fn() },
   },
 }));
-vi.mock("../../../modules/contact/contact.service.js", () => ({
+vi.mock("../../../modules/contacts/contact.service.js", () => ({
   createMultipleContacts: vi.fn(),
 }));
-vi.mock("../../../modules/contact/contactGroup/contactGroup.service.js", async () => {
+vi.mock("../../../modules/contacts/audiences/audience.service.js", async () => {
   const errors = await vi.importActual<
-    typeof import("../../../modules/contact/contactGroup/contactGroup.errors.js")
-  >("../../../modules/contact/contactGroup/contactGroup.errors.js");
+    typeof import("../../../modules/contacts/audiences/audience.errors.js")
+  >("../../../modules/contacts/audiences/audience.errors.js");
   return {
     ContactGroupNotFoundError: errors.ContactGroupNotFoundError,
     addExistingContactsToGroup: vi.fn(),
@@ -59,13 +71,13 @@ vi.mock("../../../modules/contact/contactGroup/contactGroup.service.js", async (
 });
 
 import prisma from "../../../utils/prisma.js";
-import { createMultipleContacts } from "../../../modules/contact/contact.service.js";
+import { createMultipleContacts } from "../../../modules/contacts/contact.service.js";
 import {
   addExistingContactsToGroup,
   ContactGroupNotFoundError,
   createContactGroup,
   removeContactsFromGroup,
-} from "../../../modules/contact/contactGroup/contactGroup.service.js";
+} from "../../../modules/contacts/audiences/audience.service.js";
 import { buildActor } from "../../../authz/actor.js";
 import { externalErrorHandler } from "../../shared/errors.js";
 import { requireScope } from "../../shared/scopes.js";
@@ -75,6 +87,7 @@ type Mock = ReturnType<typeof vi.fn>;
 const db = prisma as unknown as {
   contactGroup: Record<"findFirst" | "findMany" | "updateMany" | "deleteMany", Mock>;
   contact: { findMany: Mock };
+  contactIdentity: { findMany: Mock };
   contactCustomField: { findMany: Mock };
 };
 
@@ -95,15 +108,13 @@ const groupRow = (id: string, createdAt = "2026-01-01T00:00:00.000Z") => ({
 const contactRow = (id: string, phone: string) => ({
   id,
   name: "Ann",
-  phone,
-  email: null,
+  identities: [{ kind: "PHONE", value: phone }],
   external_id: null,
   source: "external",
   consent: true,
   createdAt: new Date("2026-01-02T00:00:00.000Z"),
   ContactLabelMap: [],
   customFields: [],
-  chatbotId: "bot-9",
   lastReceivedMetadata: { secret: true },
   waMessageAssignStatus: "OPEN",
   orgId: ORG,
@@ -139,10 +150,17 @@ beforeEach(() => {
   }));
   db.contact.findMany.mockImplementation(async ({ where }: { where: Where }) =>
     CONTACTS.filter(
-      (c) =>
-        c.orgId === where.orgId &&
-        (!where.id?.in || where.id.in.includes(c.id)) &&
-        (!where.phone?.in || where.phone.in.includes(c.phone)),
+      (c) => c.orgId === where.orgId && (!where.id?.in || where.id.in.includes(c.id)),
+    ),
+  );
+  identities = phoneIdentities();
+  db.contactIdentity.findMany.mockImplementation(async ({ where }: { where: Where }) =>
+    identities.filter(
+      (i) =>
+        (!where.orgId || i.orgId === where.orgId) &&
+        i.kind === where.kind &&
+        (!where.contactId?.in || where.contactId.in.includes(i.contactId)) &&
+        (!where.value?.in || where.value.in.includes(i.value)),
     ),
   );
   db.contactCustomField.findMany.mockResolvedValue([]);
@@ -172,7 +190,7 @@ describe("responses are allowlisted", () => {
     const res = await app.inject({ method: "GET", url: `/${G1}/contacts` });
 
     expect(res.statusCode).toBe(200);
-    for (const leaked of ["chatbotId", "lastReceivedMetadata", "waMessageAssignStatus", "orgId"]) {
+    for (const leaked of ["lastReceivedMetadata", "waMessageAssignStatus", "orgId"]) {
       expect(res.payload).not.toContain(leaked);
     }
     expect(res.json().data[0]).toMatchObject({ id: C1, phone: "919000000001", labels: [] });
@@ -275,7 +293,10 @@ describe("removing contacts", () => {
 
 describe("importing contacts", () => {
   test("creates the unknown, reuses the known, and collapses repeated phones", async () => {
-    (createMultipleContacts as Mock).mockResolvedValue([{ id: "new-1", phone: "919000000003" }]);
+    (createMultipleContacts as Mock).mockImplementation(async () => {
+      identities.push({ contactId: "new-1", orgId: ORG, kind: "PHONE", value: "919000000003" });
+      return [{ id: "new-1" }];
+    });
     (addExistingContactsToGroup as Mock).mockResolvedValue({ added: 1, skipped: 0 });
     const app = await buildApp();
     const res = await app.inject({
@@ -310,6 +331,12 @@ describe("importing contacts", () => {
     expect(toCreate[0]).not.toHaveProperty("labels");
     expect(toCreate[0]).not.toHaveProperty("contactGroupIds");
     expect(addExistingContactsToGroup).toHaveBeenCalledWith(G1, [C1, "new-1"], undefined, ORG);
+    // The known phone is looked up as an identity of the key's org.
+    expect(db.contactIdentity.findMany.mock.calls[0][0].where).toEqual({
+      orgId: ORG,
+      kind: "PHONE",
+      value: { in: ["919000000001", "919000000003"] },
+    });
   });
 
   test("every contact already a member is a 200", async () => {

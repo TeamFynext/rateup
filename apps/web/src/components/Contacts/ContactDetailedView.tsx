@@ -254,6 +254,13 @@ const ContactDetailedView = ({
   const inboxStatus = details?.waMessageAssignStatus ?? selectedContact.waMessageAssignStatus;
   const lifecycleName = details?.Lifecycle?.name ?? selectedContact.Lifecycle?.name;
   const hasConsent = details?.consent ?? selectedContact.consent;
+  // On a webchat or Messenger contact, `other` holds the visitor or Messenger id (listed under
+  // Identities), not a place.
+  const source = details?.source ?? selectedContact.source;
+  const location =
+    source === "WEBCHAT" || source === "FACEBOOK"
+      ? null
+      : (details?.other ?? selectedContact.other);
   // The identities are the source of truth for how this person is reached; the `phone`
   // column of an older Instagram/Messenger contact holds its platform id, not a number.
   const { data: identityOverview } = useContactIdentityOverview(selectedContact.id, opened);
@@ -307,7 +314,7 @@ const ContactDetailedView = ({
             </div>
           </div>
           <div className="flex items-center gap-1.5 mt-2 flex-wrap">
-            {getSourceBadge(details?.source ?? selectedContact.source)}
+            {getSourceBadge(source)}
             {inboxStatus && (
               <Badge
                 variant="secondary"
@@ -370,11 +377,7 @@ const ContactDetailedView = ({
                 value={details?.whatsappUserName}
                 copyValue={details?.whatsappUserName}
               />
-              <Row
-                label="Location"
-                value={details?.other ?? selectedContact.other}
-                copyValue={details?.other ?? selectedContact.other}
-              />
+              <Row label="Location" value={location} copyValue={location} />
               <Row label="Date of birth" value={formatDate(details?.dob ?? selectedContact.dob)} />
               <Row label="Consent" value={hasConsent ? "Given" : "Not given"} />
               <Row

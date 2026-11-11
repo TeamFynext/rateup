@@ -1,6 +1,6 @@
 /* Copy for the Meta AI Agent landing page. The agent is Meta's Business AI, hosted by Meta and
    set up from RateUp — check `components/dashboard/metaAgent` and
-   `rateup-api/src/modules/metaAgent` before adding a claim. It runs on WhatsApp only. */
+   `apps/api/src/modules/meta/agent` before adding a claim. It runs on WhatsApp only. */
 
 import type { ProductFaqItem } from "../shared/ProductFaq";
 

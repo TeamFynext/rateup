@@ -38,7 +38,7 @@ vi.mock("../integrations.service.js", () => ({
   getIntegrationByName: vi.fn(),
   updateIntegrationByName: vi.fn(),
 }));
-vi.mock("../../org/org.services.js", () => ({ pauseOrg: vi.fn() }));
+vi.mock("../../settings/org/org.services.js", () => ({ pauseOrg: vi.fn() }));
 vi.mock("./shopify.config.js", () => ({
   default: {
     config: { scopes: { equals: vi.fn(() => true) } },
@@ -48,30 +48,32 @@ vi.mock("./shopify.config.js", () => ({
     utils: { sanitizeShop: vi.fn((s: string) => s) },
   },
 }));
-vi.mock("../../whatsapp/whatsappSurvey/wasurvey.service.js", () => ({ sendMessage: vi.fn() }));
-vi.mock("../../whatsapp/whatsappSurvey/wasurvey.controller.js", () => ({
+vi.mock("../../meta/whatsapp/webhook/whatsapp.service.js", () => ({ sendMessage: vi.fn() }));
+vi.mock("../../meta/whatsapp/webhook/whatsapp.controller.js", () => ({
   convertComponentForSenting: vi.fn(),
   updateButtonText: vi.fn(),
   wait: vi.fn(),
 }));
-vi.mock("../../stats/stats.service.js", () => ({ updateMonthlyStat: vi.fn() }));
-vi.mock("../../whatsapp/automatedReply/wa_automatedReply.utils.js", () => ({
+vi.mock("../../analytics/stats/stats.service.js", () => ({ updateMonthlyStat: vi.fn() }));
+vi.mock("../../automation/rules/rules.utils.js", () => ({
   checkAndExecuteRuleByTriggerEvent: vi.fn(),
 }));
-vi.mock("../../whatsapp/whatsappSurvey/wasurvey.utils.js", () => ({
+vi.mock("../../meta/whatsapp/webhook/whatsapp.utils.js", () => ({
   createTemplateMessage: vi.fn(),
 }));
-vi.mock("../../whatsapp/messageTemplates/wa_templates.service.js", () => ({
+vi.mock("../../meta/whatsapp/templates/templates.service.js", () => ({
   getDbTemplate: vi.fn(),
 }));
-vi.mock("../../whatsapp/messageTemplates/wa_templates.utils.js", () => ({
+vi.mock("../../meta/whatsapp/templates/templates.utils.js", () => ({
   getFlowIdFromTemplateComponents: vi.fn(),
 }));
-vi.mock("../../whatsapp/messageTemplates/wa_templates.controller.js", () => ({
+vi.mock("../../meta/whatsapp/templates/templates.controller.js", () => ({
   sendTemplateToUserCore: vi.fn(),
 }));
-vi.mock("../../subscription/subscription.service.js", () => ({ getSubscription: vi.fn() }));
-vi.mock("../../notification/notify.js", () => ({ notify: vi.fn() }));
+vi.mock("../../settings/subscription/subscription.service.js", () => ({
+  getSubscription: vi.fn(),
+}));
+vi.mock("../../settings/notifications/notify.js", () => ({ notify: vi.fn() }));
 // Loyalty's own decisions are covered in shopifyLoyalty.service.test.ts; here only
 // what it is handed matters.
 vi.mock("../../loyalty/accounts/account.service.js", () => ({ awardPoints: vi.fn() }));
@@ -91,8 +93,8 @@ import prisma from "../../../utils/prisma.js";
 import { shopifySurveyQueue } from "../../../workers/bullmq/queues/index.js";
 import { shopifyLoyaltyQueue } from "../../../workers/bullmq/queues/webhook.queue.js";
 import { updateIntegrationByName } from "../integrations.service.js";
-import { sendTemplateToUserCore } from "../../whatsapp/messageTemplates/wa_templates.controller.js";
-import { checkAndExecuteRuleByTriggerEvent } from "../../whatsapp/automatedReply/wa_automatedReply.utils.js";
+import { sendTemplateToUserCore } from "../../meta/whatsapp/templates/templates.controller.js";
+import { checkAndExecuteRuleByTriggerEvent } from "../../automation/rules/rules.utils.js";
 import {
   handleShopifyOrderEvents,
   processShopifySurveySchedule,

@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { contactCoreSchema } from "../../../modules/contact/contact.schema.js";
+import { contactCoreSchema } from "../../../modules/contacts/contact.schema.js";
 
 const createContactSchema = contactCoreSchema.omit({ source: true });
 const createMultipleContactSchema = z.array(createContactSchema);

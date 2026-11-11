@@ -88,7 +88,7 @@ function FlowEditorContent({
   const isInitialLoadRef = useRef(true);
   const qc = useQueryClient();
   const platform = automationPlatformOf(waAutomationData?.platform);
-  // Every channel saves through /api/chatbots, which also refuses blocks the channel can't send.
+  // Every channel saves through /api/automation/journeys, which also refuses blocks the channel can't send.
   const updateWaAutomatedReplyMutation = useUpdateChatbotMutation();
 
   // Initialize history manager

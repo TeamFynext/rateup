@@ -176,7 +176,13 @@ export function IgStoryReplyBubble({
 }
 
 /** One attachment of an Instagram/Messenger DM. */
-function IgAttachment({ attachment }: { attachment: IgAttachmentItem }) {
+function IgAttachment({
+  attachment,
+  onBrand = false,
+}: {
+  attachment: IgAttachmentItem;
+  onBrand?: boolean;
+}) {
   const t = useTheme();
   if (isSharedPostAttachment(attachment.type)) return <IgSharedPostCard attachment={attachment} />;
   switch (attachment.type) {
@@ -184,11 +190,11 @@ function IgAttachment({ attachment }: { attachment: IgAttachmentItem }) {
     case "sticker":
       return <WaInboxImage messageContent={attachment.content} />;
     case "video":
-      return <WaInboxVideo messageContent={attachment.content} />;
+      return <WaInboxVideo messageContent={attachment.content} onBrand={onBrand} />;
     case "audio":
-      return <WaInboxAudio messageContent={attachment.content} timestamp="" />;
+      return <WaInboxAudio messageContent={attachment.content} onBrand={onBrand} />;
     case "file":
-      return <WaInboxDocument messageContent={attachment.content} />;
+      return <WaInboxDocument messageContent={attachment.content} onBrand={onBrand} />;
     case "story_mention":
       return (
         <View style={{ gap: 8 }}>
@@ -219,15 +225,18 @@ function IgAttachment({ attachment }: { attachment: IgAttachmentItem }) {
 export function IgAttachmentsBubble({
   content,
   textColor,
+  onBrand = false,
 }: {
   content?: { attachments?: IgAttachmentItem[]; text?: string } | null;
   textColor?: string;
+  /** On the brand-blue bubble of an agent's own message. */
+  onBrand?: boolean;
 }) {
   const attachments = content?.attachments ?? [];
   return (
     <View style={{ gap: 10 }}>
       {attachments.map((attachment, index) => (
-        <IgAttachment key={index} attachment={attachment} />
+        <IgAttachment key={index} attachment={attachment} onBrand={onBrand} />
       ))}
       {content?.text ? <WaInboxText messageContent={content.text} textColor={textColor} /> : null}
     </View>

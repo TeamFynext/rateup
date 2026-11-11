@@ -15,7 +15,7 @@ import { WhatsAppMark } from "./channel-marks";
  */
 
 /** Click-to-chat link for the support number. Mirrors the one in `BookDemoPage`. */
-export const WHATSAPP_HREF = `https://wa.me/${import.meta.env.VITE_SUPPORT_WHATSAPP}?text=${encodeURIComponent(
+export const WHATSAPP_HREF = `https://wa.me/${import.meta.env.VITE_SUPPORT_WHATSAPP_NUMBER}?text=${encodeURIComponent(
   "Hi, I would like to know more about RateUp",
 )}`;
 

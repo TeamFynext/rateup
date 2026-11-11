@@ -1,3 +1,5 @@
+import { trimTrailingSlash } from "@rateup/utils/url";
+
 import {
   PageType,
   QuestionType,
@@ -9,7 +11,7 @@ import {
 
 export const docsPath = "https://docs.rateup.app";
 /** App sounds (ringtone, notification chime), served from the CDN's `sounds/` folder. */
-export const soundsPath = `${import.meta.env.VITE_CLOUDFRONT_WEB_IMAGES_URL}/sounds`;
+export const soundsPath = `${import.meta.env.VITE_WEB_IMAGES_CDN_URL}/sounds`;
 /**
  * Origin of the headless Ghost instance behind /blog. Posts come back with `url`/`canonical_url`
  * pointing at this host, which serves `Disallow: /` — emitting either as a canonical de-indexes
@@ -24,13 +26,12 @@ export const GHOST_ORIGIN = "https://yellow-roadrunner.pikapod.net";
 /* Origin of the CloudFront distribution every image on the site is served from. Exported on its
    own so `__root.tsx` can `preconnect` to it — the LCP image lives here, and opening the
    connection during HTML parse takes the DNS/TLS handshake off the critical path. */
-export const cloudfrontOrigin: string = import.meta.env.VITE_CLOUDFRONT_WEB_IMAGES_URL;
+export const cloudfrontOrigin: string = import.meta.env.VITE_WEB_IMAGES_CDN_URL;
 export const imagesPath = `${cloudfrontOrigin}/images`;
 /* Sibling prefix to `imagesPath` on the same CloudFront distribution — `/videos` and
    `/images` are both top-level keys in the bucket, not nested under one another. */
-export const videosPath = `${import.meta.env.VITE_CLOUDFRONT_WEB_IMAGES_URL}/videos`;
+export const videosPath = `${import.meta.env.VITE_WEB_IMAGES_CDN_URL}/videos`;
 
-export const surveyUploadsPath = `${import.meta.env.VITE_AWS_CLOUDFRONT_URL}`;
 export const isProduction = import.meta.env.VITE_FRONTEND_URL === "https://rateup.app";
 export const emailPattern = /^[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
 
@@ -204,7 +205,7 @@ export const ChoiceTypeQuestions = [
   QuestionType.WaButtons,
 ];
 
-export const fallbackImage = `${import.meta.env.VITE_CLOUDFRONT_WEB_IMAGES_URL}/images/no_image_template.jpeg`;
+export const fallbackImage = `${import.meta.env.VITE_WEB_IMAGES_CDN_URL}/images/no_image_template.jpeg`;
 
 export const mimeTypesForImage: { [key: string]: string } = {
   jpg: "image/jpeg",
@@ -393,8 +394,8 @@ export const defaultTitleSubtitleStartBtnTextsObj = {
   },
 };
 
-export const API_URL = import.meta.env.VITE_API_URL;
-export const FRONTEND_URL = import.meta.env.VITE_FRONTEND_URL;
+export const API_URL = trimTrailingSlash(import.meta.env.VITE_API_URL);
+export const FRONTEND_URL = trimTrailingSlash(import.meta.env.VITE_FRONTEND_URL);
 
 export const DEFAULT_IMAGE_BASE64_START = "data:image/jpeg;base64,";
 

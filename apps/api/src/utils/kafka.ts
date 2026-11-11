@@ -4,6 +4,7 @@
 import { Kafka, Partitioners, type Admin, type ITopicConfig, type ProducerConfig } from "kafkajs";
 
 import { log } from "./logger.js";
+import { envFlag } from "./envFlag.js";
 
 export const STATUS_EVENTS_TOPIC = "status-events";
 export const WA_WEBHOOKS_TOPIC = "wa-webhooks";
@@ -22,13 +23,9 @@ export const KAFKA_NUM_PARTITIONS = 12;
 
 type Env = Record<string, string | undefined>;
 
-/**
- * Broker list from `KAFKA_BROKERS` (comma-separated), falling back to the older
- * single-broker `KAFKA_URL` — which is split on commas too, so a deployment that
- * only ever set `KAFKA_URL` can grow to several brokers without renaming it.
- */
+/** Broker list from `KAFKA_BROKERS`: one `host:port`, or several separated by commas. */
 export function parseKafkaBrokers(env: Env = process.env): string[] {
-  const raw = env.KAFKA_BROKERS?.trim() || env.KAFKA_URL?.trim() || "";
+  const raw = env.KAFKA_BROKERS?.trim() ?? "";
   const brokers = [
     ...new Set(
       raw
@@ -38,7 +35,7 @@ export function parseKafkaBrokers(env: Env = process.env): string[] {
     ),
   ];
   if (!brokers.length) {
-    throw new Error("KAFKA_BROKERS (or KAFKA_URL) environment variable is required but not set");
+    throw new Error("KAFKA_BROKERS environment variable is required but not set");
   }
   return brokers;
 }
@@ -61,7 +58,7 @@ export function createKafkaClient(env: Env = process.env): Kafka {
  * send (its default — nothing here overrides it), retries > 0, and at most 5
  * requests in flight. kafkajs also serialises produce requests per broker behind
  * a mutex when idempotence is on, so a producer far from its brokers trades
- * throughput for it; `KAFKA_IDEMPOTENT=0` turns it off.
+ * throughput for it; `KAFKA_IDEMPOTENT=false` turns it off.
  *
  * Retries are bounded on purpose. kafkajs defaults an idempotent producer to
  * MAX_SAFE_INTEGER retries, which turns a broker outage into `send()` calls that
@@ -71,7 +68,7 @@ export function createKafkaClient(env: Env = process.env): Kafka {
  * trade being made.
  */
 export function kafkaProducerConfig(env: Env = process.env): ProducerConfig {
-  const idempotent = !["0", "false"].includes((env.KAFKA_IDEMPOTENT ?? "").trim().toLowerCase());
+  const idempotent = envFlag("KAFKA_IDEMPOTENT", true, env);
   return {
     createPartitioner: Partitioners.DefaultPartitioner,
     ...(idempotent ? { idempotent: true, maxInFlightRequests: 5, retry: { retries: 5 } } : {}),

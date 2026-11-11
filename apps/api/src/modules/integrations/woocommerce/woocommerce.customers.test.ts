@@ -4,23 +4,29 @@ vi.mock("../../../utils/logger.js", () => ({
   log: { error: vi.fn(), info: vi.fn(), warn: vi.fn(), debug: vi.fn(), trace: vi.fn() },
 }));
 vi.mock("../../../utils/prisma.js", () => ({
-  default: { contact: { findUnique: vi.fn(), update: vi.fn() } },
+  default: { contact: { findFirst: vi.fn(), update: vi.fn() } },
+}));
+vi.mock("../../contacts/identity/contactFields.js", async (importOriginal) => ({
+  ...(await importOriginal<object>()),
+  setPrimaryIdentities: vi.fn(),
 }));
 vi.mock("../shared/entityLink.js", () => ({
   findLinkByExternalId: vi.fn(),
   recordLink: vi.fn(),
 }));
-vi.mock("../../contact/contact.service.js", () => ({ createContact: vi.fn() }));
+vi.mock("../../contacts/contact.service.js", () => ({ createContact: vi.fn() }));
 
 import prisma from "../../../utils/prisma.js";
-import { createContact } from "../../contact/contact.service.js";
+import { createContact } from "../../contacts/contact.service.js";
+import { setPrimaryIdentities } from "../../contacts/identity/contactFields.js";
+import { IdentityTakenError } from "../../contacts/identity/identity.service.js";
 import { findLinkByExternalId, recordLink } from "../shared/entityLink.js";
 import { handleWooCustomer } from "./woocommerce.customers.js";
 import { toWooContact, type WooCustomerPayload } from "./woocommerce.mapping.js";
 import type { WooCredential } from "./woocommerce.types.js";
 
 type Mock = ReturnType<typeof vi.fn>;
-const findContact = prisma.contact.findUnique as unknown as Mock;
+const findContact = prisma.contact.findFirst as unknown as Mock;
 const updateContact = prisma.contact.update as unknown as Mock;
 
 const credential: WooCredential = {
@@ -114,15 +120,36 @@ describe("customer.created", () => {
   });
 
   test("a number already in RateUp is linked, filling only what the contact lacks", async () => {
-    findContact.mockResolvedValue({ id: "contact-1", name: "Asha N.", email: null });
+    findContact.mockResolvedValue({
+      id: "contact-1",
+      name: "Asha N.",
+      identities: [{ kind: "PHONE", value: "919876543210" }],
+    });
 
     await expect(handleWooCustomer(integration(), delivery(customer()))).resolves.toBe("linked");
 
     expect(createContact).not.toHaveBeenCalled();
-    expect(updateContact).toHaveBeenCalledWith({
-      where: { id: "contact-1" },
-      data: { email: "asha@example.com" },
+    expect(findContact.mock.calls[0][0].where).toEqual({
+      orgId: "org-1",
+      identities: { some: { kind: "PHONE", value: "919876543210" } },
     });
+    expect(updateContact).not.toHaveBeenCalled();
+    expect(setPrimaryIdentities).toHaveBeenCalledWith(
+      "org-1",
+      "contact-1",
+      { email: "asha@example.com" },
+      "IMPORT",
+    );
+    expect(recordLink).toHaveBeenCalledWith(LINK, { rateupId: "contact-1", externalId: "55" });
+  });
+
+  test("an email another contact already has is left off, and the customer still linked", async () => {
+    findContact.mockResolvedValue({ id: "contact-1", name: "Asha N.", identities: [] });
+    (setPrimaryIdentities as Mock).mockRejectedValueOnce(
+      new IdentityTakenError("EMAIL", "asha@example.com", "contact-9"),
+    );
+
+    await expect(handleWooCustomer(integration(), delivery(customer()))).resolves.toBe("linked");
     expect(recordLink).toHaveBeenCalledWith(LINK, { rateupId: "contact-1", externalId: "55" });
   });
 
@@ -142,7 +169,7 @@ describe("customer.created", () => {
     );
     findContact
       .mockResolvedValueOnce(null)
-      .mockResolvedValueOnce({ id: "contact-2", name: null, email: null });
+      .mockResolvedValueOnce({ id: "contact-2", name: null, identities: [] });
 
     await expect(handleWooCustomer(integration(), delivery(customer()))).resolves.toBe("linked");
     expect(recordLink).toHaveBeenCalledWith(LINK, { rateupId: "contact-2", externalId: "55" });

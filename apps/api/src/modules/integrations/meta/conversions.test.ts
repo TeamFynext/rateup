@@ -12,16 +12,16 @@ vi.mock("../../../utils/prisma.js", () => ({
   },
 }));
 
-vi.mock("../../whatsapp/wa_axios.js", () => ({ callMetaApi: vi.fn() }));
-vi.mock("../../whatsapp/settings/wa_settings.service.js", () => ({ getWaSettings: vi.fn() }));
-vi.mock("../../notification/notify.js", () => ({ notify: vi.fn() }));
+vi.mock("../../meta/whatsapp/wa_axios.js", () => ({ callMetaApi: vi.fn() }));
+vi.mock("../../meta/whatsapp/settings/settings.service.js", () => ({ getWaSettings: vi.fn() }));
+vi.mock("../../settings/notifications/notify.js", () => ({ notify: vi.fn() }));
 
 import crypto from "node:crypto";
 import prisma from "../../../utils/prisma.js";
 import { log } from "../../../utils/logger.js";
-import { callMetaApi } from "../../whatsapp/wa_axios.js";
-import { getWaSettings } from "../../whatsapp/settings/wa_settings.service.js";
-import { notify } from "../../notification/notify.js";
+import { callMetaApi } from "../../meta/whatsapp/wa_axios.js";
+import { getWaSettings } from "../../meta/whatsapp/settings/settings.service.js";
+import { notify } from "../../settings/notifications/notify.js";
 import { sendWonConversionEvent, triggerConversionsApiForContact } from "./conversions.service.js";
 
 type Mock = ReturnType<typeof vi.fn>;

@@ -5,7 +5,7 @@ import { useEffect, useRef, useState } from "react";
 export const AUTO_OPENED_KEY = "support_widget_auto_opened";
 
 /* Served from the web-images distribution like every other `/images/…` asset. */
-const LAUNCHER_AVATAR = `${import.meta.env.VITE_CLOUDFRONT_WEB_IMAGES_URL}/images/support.jpeg`;
+const LAUNCHER_AVATAR = `${import.meta.env.VITE_WEB_IMAGES_CDN_URL}/images/support.jpeg`;
 
 export function PersonGlyph({ className = "size-6" }: Readonly<{ className?: string }>) {
   return (

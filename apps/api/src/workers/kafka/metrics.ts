@@ -6,7 +6,7 @@
 // replica (take `max`, not `sum`). Results are cached briefly so a scrape storm
 // cannot turn into a broker request storm.
 import type { Admin, Consumer, Kafka } from "kafkajs";
-import { Gauge } from "prom-client";
+import { Gauge } from "@prometheus-io/client";
 
 import { log } from "../shared/logger.js";
 import type { HealthCheckResult } from "../shared/healthServer.js";

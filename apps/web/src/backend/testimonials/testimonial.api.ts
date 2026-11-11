@@ -12,11 +12,11 @@ export interface TestimonialCollectionSummary {
   readonly teamId?: string;
 }
 
-const TESTIMONIAL_BASE_URL = "/testimonials";
-const TESTIMONIAL_COLLECTION_BASE_URL = "/testimonial/collections";
+const TESTIMONIAL_BASE_URL = "/surveys/testimonials";
+const TESTIMONIAL_COLLECTION_BASE_URL = "/surveys/testimonials/collections";
 
 export async function getAllTestimonialBySurvey(surveyId: string) {
-  const testimonials = await axiosClient.get(`/testimonials/${surveyId}`);
+  const testimonials = await axiosClient.get(`${TESTIMONIAL_BASE_URL}/${surveyId}`);
   return testimonials.data;
 }
 

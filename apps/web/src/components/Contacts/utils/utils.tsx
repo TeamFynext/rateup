@@ -28,6 +28,9 @@ import type { CustomFieldData } from "@/backend/campaign/contacts/contacts.api";
 import { useContactTableStore } from "@/components/dashboard/contacts/store/contact-table-store.ts";
 import type { DataTableFeatures } from "@/components/Table/data-table-features.ts";
 import { ContactAvatar } from "@/components/ui/contact-avatar.tsx";
+import i18n from "@/i18n.ts";
+
+import { ContactHandleCell, contactHandleText } from "./ContactHandleCell";
 
 /**
  * The name doubles as the row's "View Details" trigger. It only publishes the row to the
@@ -151,12 +154,14 @@ export const contactColumn = (
     ...selectCheckBox,
     ...contactDetailsColumn,
     {
-      header: "Phone/IGSID",
-      accessorKey: "phone",
-      cell: (info) => info.getValue(),
+      header: "Phone / handle",
+      // The main phone or handle as text, for the table's copy and export; the cell adds an
+      // icon for each other kind of identity the contact is known by.
+      accessorFn: (row) => contactHandleText(row, i18n.t),
+      cell: (info) => <ContactHandleCell row={info.row.original} />,
       id: "phone",
       enableSorting: false,
-      meta: { title: "Phone/IGSID" },
+      meta: { title: "Phone / handle" },
     },
     {
       header: "Status",

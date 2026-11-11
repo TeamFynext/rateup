@@ -17,7 +17,7 @@ import { findProgramMember } from "./memberLookup.js";
 import { replyText, type InboundReplyContext } from "../messaging/reply.js";
 import { NOT_SENT, sendLoyaltyEvent } from "../messaging/send.js";
 import type { LoyaltySendOutcome } from "../messaging/types.js";
-import { generateWhatsAppJoinLink } from "../../whatsapp/whatsappSurvey/wasurvey.utils.js";
+import { generateWhatsAppJoinLink } from "../../meta/whatsapp/webhook/whatsapp.utils.js";
 import { LoyaltyEventType, LoyaltyTemplateTypes } from "../../../types/enums.js";
 import { renderReplyText } from "../richText.js";
 import { scheduleFeedbackRequest } from "../feedback/feedback.scheduler.js";
@@ -25,6 +25,31 @@ import { log } from "../../../utils/logger.js";
 import { ensureMemberCard, sendMemberCard } from "./memberCard.service.js";
 import { effectiveBonuses } from "../program/bonuses.js";
 import { announceLoyaltyTransactions, type LoyaltyLedgerRow } from "../loyalty.webhooks.js";
+import { ContactIdentitySource } from "../../../generated/prisma/enums.js";
+import {
+  contactFields,
+  contactWhereHasIdentity,
+  contactWhereIdentity,
+  contactWhereIdentityContains,
+  primaryIdentities,
+  type PrimaryIdentityRow,
+  setPrimaryIdentities,
+} from "../../contacts/identity/contactFields.js";
+import { memberContactInclude, withMemberContact, withMemberPhoneEmail } from "../memberContact.js";
+
+/**
+ * A member search on phone: digits-only matches the stored number; text without digits
+ * keeps the old "contains the text" match (which an all-digits value never satisfied).
+ */
+function phoneContains(text: string): Prisma.ContactWhereInput {
+  const digits = text.replace(/\D/g, "");
+  return digits ? contactWhereIdentityContains(["phone"], digits) : { id: { in: [] } };
+}
+
+function pickPhoneEmail(identities: readonly PrimaryIdentityRow[]) {
+  const { phone, email } = contactFields(identities);
+  return { phone, email };
+}
 
 export async function findAccountByReferralCode(programId: string, referralCode: string) {
   return await prisma.customerLoyaltyAccount.findFirst({
@@ -80,10 +105,8 @@ export async function createCustomerAccount(
       : undefined);
   // Check if contact with this phone already exists
   const existingContact = await prisma.contact.findFirst({
-    where: {
-      phone,
-      orgId,
-    },
+    where: { orgId, ...contactWhereIdentity("phone", phone) },
+    include: primaryIdentities,
   });
 
   if (existingContact) {
@@ -102,23 +125,39 @@ export async function createCustomerAccount(
     if (data.dob && (trusted || !existingContact.dob)) changes.dob = new Date(data.dob);
     if (data.gender && (trusted || !existingContact.gender)) changes.gender = data.gender;
     if (Object.keys(changes).length > 0) {
-      contact = await prisma.contact.update({ where: { id: contactId }, data: changes });
+      contact = await prisma.contact.update({
+        where: { id: contactId },
+        data: changes,
+        include: primaryIdentities,
+      });
     }
   } else {
     // Create new contact
-    contact = await prisma.contact.create({
-      data: {
+    contact = await prisma.$transaction(async (tx) => {
+      const row = await tx.contact.create({
+        data: {
+          orgId,
+          name: data.name,
+          source: "loyalty_program",
+          dob: data.dob ? new Date(data.dob) : null,
+          gender: data.gender ?? null,
+        },
+      });
+      await setPrimaryIdentities(
         orgId,
-        phone,
-        name: data.name,
-        email: data.email,
-        source: "loyalty_program",
-        dob: data.dob ? new Date(data.dob) : null,
-        gender: data.gender ?? null,
-      },
+        row.id,
+        { phone: phone ?? null, email: data.email ?? undefined },
+        ContactIdentitySource.CUSTOMER,
+        tx,
+      );
+      return await tx.contact.findUniqueOrThrow({
+        where: { id: row.id },
+        include: primaryIdentities,
+      });
     });
     contactId = contact.id;
   }
+  const contactPhone = contactFields(contact.identities).phone;
 
   // Check if customer already exists
   const existing = await prisma.customerLoyaltyAccount.findUnique({
@@ -141,7 +180,7 @@ export async function createCustomerAccount(
           status: "active",
         },
         include: {
-          contact: true,
+          contact: memberContactInclude,
         },
       });
       if (account && reply) {
@@ -149,7 +188,7 @@ export async function createCustomerAccount(
       }
       await sendCardAfterEnrolment(orgId, account.id, reply);
       await payInstagramMentionsOnJoin(orgId, account.contactId, data.instagramMentionId);
-      return account;
+      return withMemberContact(account);
     } else {
       throw new LoyaltyError("MEMBER_EXISTS", "Customer account already exists");
     }
@@ -157,8 +196,8 @@ export async function createCustomerAccount(
 
   // Generate referral code
   const referralCode = await generateReferralCode(
-    contact?.name || contact?.phone || "CUSTOMER",
-    contact?.phone || contactId,
+    contact?.name || contactPhone || "CUSTOMER",
+    contactPhone || contactId,
   );
 
   // Get program to check signup bonus
@@ -219,7 +258,7 @@ export async function createCustomerAccount(
       ...(hold ? { verifiedAt: null, pendingBonuses: snapshot } : {}),
     },
     include: {
-      contact: true,
+      contact: memberContactInclude,
     },
   });
 
@@ -234,7 +273,15 @@ export async function createCustomerAccount(
   }
 
   if (!hold) {
-    bonusRows.push(...(await creditNewMember(prisma, account, snapshot, openingPoints, orgId)));
+    bonusRows.push(
+      ...(await creditNewMember(
+        prisma,
+        withMemberContact(account),
+        snapshot,
+        openingPoints,
+        orgId,
+      )),
+    );
   }
   // Each bonus row was its own committed write (`prisma`, not a transaction).
   void announceLoyaltyTransactions(orgId, bonusRows);
@@ -287,7 +334,7 @@ You are now registered in our Loyalty Program.
   await sendCardAfterEnrolment(orgId, account.id, reply);
   await payInstagramMentionsOnJoin(orgId, account.contactId, data.instagramMentionId);
 
-  return account;
+  return withMemberContact(account);
 }
 
 /**
@@ -313,7 +360,7 @@ async function payInstagramMentionsOnJoin(
     });
     if (!waiting) return;
     const { awardInstagramMentionsOnJoin } =
-      await import("../../whatsapp/instagram/instagram_mentions.service.js");
+      await import("../../meta/instagram/instagram_mentions.service.js");
     await awardInstagramMentionsOnJoin({ orgId, contactId, mentionId });
   } catch (e) {
     log.error({ err: e, orgId, contactId }, "Could not pay Instagram mentions after enrolment");
@@ -476,7 +523,7 @@ export async function releasePendingSignupBonus(
 
   const account = await db.customerLoyaltyAccount.findUnique({
     where: { id: accountId },
-    include: { contact: { select: { phone: true, name: true, orgId: true } } },
+    include: { contact: { select: { name: true, orgId: true, ...primaryIdentities } } },
   });
   const snapshot = account?.pendingBonuses ?? null;
   if (!account || !snapshot) return false;
@@ -496,7 +543,7 @@ export async function releasePendingSignupBonus(
 
   const memberRows = await creditNewMember(
     db,
-    account,
+    withMemberContact(account),
     snapshot,
     updated.currentPoints,
     account.contact.orgId,
@@ -515,7 +562,7 @@ export async function releasePendingSignupBonusByPhone(
   orgId: string,
 ): Promise<boolean> {
   const pending = await prisma.customerLoyaltyAccount.findFirst({
-    where: { verifiedAt: null, contact: { phone: parsePhoneforWa(phone), orgId } },
+    where: { verifiedAt: null, contact: { orgId, ...contactWhereIdentity("phone", phone) } },
     select: { id: true },
   });
   if (!pending) return false;
@@ -523,17 +570,14 @@ export async function releasePendingSignupBonusByPhone(
 }
 
 export async function getCustomerAccounts(programId: string, search?: string, name?: string) {
-  const contactFilter: Record<string, unknown> = {};
+  const contactFilter: Prisma.ContactWhereInput = {};
   if (name) {
     contactFilter.name = { contains: name, mode: "insensitive" };
   } else if (search) {
-    contactFilter.OR = [
-      { name: { contains: search, mode: "insensitive" } },
-      { phone: { contains: search, mode: "insensitive" } },
-    ];
+    contactFilter.OR = [{ name: { contains: search, mode: "insensitive" } }, phoneContains(search)];
   }
 
-  return await prisma.customerLoyaltyAccount.findMany({
+  const rows = await prisma.customerLoyaltyAccount.findMany({
     where: {
       programId,
       ...(Object.keys(contactFilter).length > 0 ? { contact: contactFilter } : {}),
@@ -544,8 +588,7 @@ export async function getCustomerAccounts(programId: string, search?: string, na
         select: {
           id: true,
           name: true,
-          phone: true,
-          email: true,
+          ...primaryIdentities,
         },
       },
       assignedRewards: {
@@ -563,17 +606,17 @@ export async function getCustomerAccounts(programId: string, search?: string, na
     },
     orderBy: { createdAt: "desc" },
   });
+  return rows.map(withMemberPhoneEmail);
 }
 
 export async function getCustomerAccountsForExport(programId: string) {
-  return await prisma.customerLoyaltyAccount.findMany({
+  const rows = await prisma.customerLoyaltyAccount.findMany({
     where: { programId },
     select: {
       contact: {
         select: {
           name: true,
-          phone: true,
-          email: true,
+          ...primaryIdentities,
         },
       },
       currentTier: {
@@ -586,6 +629,10 @@ export async function getCustomerAccountsForExport(programId: string) {
       referralCode: true,
     },
     orderBy: { createdAt: "desc" },
+  });
+  return rows.map(({ contact, ...row }) => {
+    const { phone, email } = contactFields(contact.identities);
+    return { ...row, contact: { name: contact.name, phone, email } };
   });
 }
 
@@ -611,7 +658,7 @@ export async function getCustomerAccountById(customerId: string, programId: stri
 }
 
 export async function getCustomerAccountByContact(programId: string, contactId: string) {
-  return await prisma.customerLoyaltyAccount.findUnique({
+  const account = await prisma.customerLoyaltyAccount.findUnique({
     where: {
       programId_contactId: {
         programId,
@@ -619,7 +666,7 @@ export async function getCustomerAccountByContact(programId: string, contactId: 
       },
     },
     include: {
-      contact: true,
+      contact: memberContactInclude,
       currentTier: true,
       transactions: {
         take: 20,
@@ -627,6 +674,7 @@ export async function getCustomerAccountByContact(programId: string, contactId: 
       },
     },
   });
+  return account ? withMemberContact(account) : null;
 }
 
 /**
@@ -638,8 +686,7 @@ export const CASHIER_ACCOUNT_INCLUDE = {
     select: {
       id: true,
       name: true,
-      phone: true,
-      email: true,
+      ...primaryIdentities,
     },
   },
   assignedRewards: {
@@ -671,10 +718,8 @@ export async function getCustomerAccountByPhone(
   // Contacts store the number without a leading "+" (see `createCustomerAccount`), so
   // normalise the way `lookupContactByPhone` does — a "+91…" from a QR scan must still hit.
   const contact = await prisma.contact.findFirst({
-    where: {
-      phone: parsePhoneforWa(phoneNumber),
-      orgId,
-    },
+    where: { orgId, ...contactWhereIdentity("phone", parsePhoneforWa(phoneNumber)) },
+    select: { id: true },
   });
 
   if (!contact) {
@@ -682,7 +727,7 @@ export async function getCustomerAccountByPhone(
   }
 
   // Then find the customer account
-  return await prisma.customerLoyaltyAccount.findUnique({
+  const account = await prisma.customerLoyaltyAccount.findUnique({
     where: {
       programId_contactId: {
         programId,
@@ -691,6 +736,7 @@ export async function getCustomerAccountByPhone(
     },
     include: CASHIER_ACCOUNT_INCLUDE,
   });
+  return account ? withMemberPhoneEmail(account) : null;
 }
 
 /**
@@ -698,10 +744,11 @@ export async function getCustomerAccountByPhone(
  * in the `where` all the same so a card from another org is a plain 404 here.
  */
 export async function getCustomerAccountByCardCode(programId: string, cardCode: string) {
-  return await prisma.customerLoyaltyAccount.findFirst({
+  const account = await prisma.customerLoyaltyAccount.findFirst({
     where: { programId, cardCode },
     include: CASHIER_ACCOUNT_INCLUDE,
   });
+  return account ? withMemberPhoneEmail(account) : null;
 }
 
 export async function updateCustomerAccount(
@@ -718,21 +765,37 @@ export async function updateCustomerAccount(
     ...(name !== undefined ? { name } : {}),
     ...(dob !== undefined ? { dob: dob === null ? null : new Date(dob) } : {}),
     ...(gender !== undefined ? { gender } : {}),
-    ...(email !== undefined ? { email } : {}),
   };
 
-  return await prisma.customerLoyaltyAccount.update({
-    where: { id: customerId, programId },
-    data: {
-      ...(status !== undefined ? { status } : {}),
-      ...(preferredChannel !== undefined ? { preferredChannel } : {}),
-      ...(Object.keys(contactChanges).length > 0 ? { contact: { update: contactChanges } } : {}),
-    },
-    include: {
-      contact: {
-        select: { id: true, name: true, phone: true, email: true, dob: true, gender: true },
+  return await prisma.$transaction(async (tx) => {
+    const account = await tx.customerLoyaltyAccount.update({
+      where: { id: customerId, programId },
+      data: {
+        ...(status !== undefined ? { status } : {}),
+        ...(preferredChannel !== undefined ? { preferredChannel } : {}),
+        ...(Object.keys(contactChanges).length > 0 ? { contact: { update: contactChanges } } : {}),
       },
-    },
+      select: { contactId: true, program: { select: { orgId: true } } },
+    });
+    // The email is the contact's primary EMAIL identity now, not a column.
+    if (email !== undefined) {
+      await setPrimaryIdentities(
+        account.program.orgId,
+        account.contactId,
+        { email },
+        ContactIdentitySource.AGENT,
+        tx,
+      );
+    }
+    const updated = await tx.customerLoyaltyAccount.findUniqueOrThrow({
+      where: { id: customerId },
+      include: {
+        contact: {
+          select: { id: true, name: true, dob: true, gender: true, ...primaryIdentities },
+        },
+      },
+    });
+    return withMemberPhoneEmail(updated);
   });
 }
 
@@ -800,7 +863,7 @@ export async function awardPoints(
   },
 ) {
   // Get customer
-  const customer = await prisma.customerLoyaltyAccount.findUnique({
+  const found = await prisma.customerLoyaltyAccount.findUnique({
     where: {
       programId_contactId: {
         programId,
@@ -808,7 +871,7 @@ export async function awardPoints(
       },
     },
     include: {
-      contact: true, // Need contact for phone number
+      contact: memberContactInclude, // Need contact for phone number
       program: true, // Need orgId? OrgId is usually checking program ownership.
       currentTier: {
         select: {
@@ -819,10 +882,11 @@ export async function awardPoints(
     },
   });
 
-  if (!customer) {
+  if (!found) {
     throw new LoyaltyError("MEMBER_NOT_FOUND", "Customer account not found. Create account first.");
   }
 
+  const customer = withMemberContact(found);
   const member = customer;
 
   if (context.idempotencyKey) {
@@ -1050,8 +1114,8 @@ export async function lookupContactByPhone(phone: string, orgId: string) {
   const normalized = parsePhoneforWa(phone);
 
   const contact = await prisma.contact.findFirst({
-    where: { phone: normalized, orgId },
-    select: { id: true, name: true, email: true, dob: true, gender: true },
+    where: { orgId, ...contactWhereIdentity("phone", normalized) },
+    select: { id: true, name: true, dob: true, gender: true, ...primaryIdentities },
   });
 
   if (!contact) {
@@ -1063,8 +1127,9 @@ export async function lookupContactByPhone(phone: string, orgId: string) {
     select: { id: true, status: true },
   });
 
+  const { identities, ...rest } = contact;
   return {
-    contact,
+    contact: { ...rest, email: contactFields(identities).email },
     // An inactive account is reactivated on submit rather than rejected, so it is not
     // the same "already a member" dead end as an active one.
     alreadyMember: Boolean(account && account.status === "active"),
@@ -1088,25 +1153,24 @@ export async function searchContactsForEnrolment(
   const textMatch: Prisma.ContactWhereInput[] = [];
   if (term.length > 0) {
     textMatch.push({ name: { contains: term, mode: "insensitive" } });
-    textMatch.push({ email: { contains: term, mode: "insensitive" } });
+    textMatch.push(contactWhereIdentityContains(["email"], term));
     // Matching on digits alone lets "+91 90000" find the contact stored as "9190000…".
-    if (digits.length > 0) textMatch.push({ phone: { contains: digits } });
+    if (digits.length > 0) textMatch.push(contactWhereIdentityContains(["phone"], digits));
   }
 
   const contacts = await prisma.contact.findMany({
     where: {
       orgId,
-      phone: { not: null },
+      ...contactWhereHasIdentity("phone"),
       isSpam: false,
       ...(textMatch.length > 0 ? { OR: textMatch } : {}),
     },
     select: {
       id: true,
       name: true,
-      phone: true,
-      email: true,
       dob: true,
       gender: true,
+      ...primaryIdentities,
       loyaltyAccounts: {
         where: { program: { orgId } },
         select: { status: true },
@@ -1120,8 +1184,9 @@ export async function searchContactsForEnrolment(
     take: limit,
   });
 
-  return contacts.map(({ loyaltyAccounts, ...contact }) => ({
+  return contacts.map(({ loyaltyAccounts, identities, ...contact }) => ({
     ...contact,
+    ...pickPhoneEmail(identities),
     /** `null` when the contact has never joined; otherwise the account's status. */
     memberStatus: loyaltyAccounts[0]?.status ?? null,
   }));
@@ -1156,8 +1221,8 @@ export async function getCustomerAccountsPaged(
     where.contact = {
       OR: [
         { name: { contains: term, mode: "insensitive" } },
-        { phone: { contains: term.replace(/\D/g, "") || term } },
-        { email: { contains: term, mode: "insensitive" } },
+        phoneContains(term),
+        contactWhereIdentityContains(["email"], term),
       ],
     };
   }
@@ -1168,7 +1233,7 @@ export async function getCustomerAccountsPaged(
       where,
       include: {
         currentTier: { select: { id: true, name: true, color: true } },
-        contact: { select: { id: true, name: true, phone: true, email: true } },
+        contact: { select: { id: true, name: true, ...primaryIdentities } },
       },
       orderBy: { createdAt: "desc" },
       skip: (opts.page - 1) * opts.limit,
@@ -1177,7 +1242,7 @@ export async function getCustomerAccountsPaged(
   ]);
 
   return {
-    rows,
+    rows: rows.map(withMemberPhoneEmail),
     pagination: {
       page: opts.page,
       limit: opts.limit,
@@ -1217,7 +1282,7 @@ export async function assignRewardToCustomer(
   // Check if customer exists
   const customer = await prisma.customerLoyaltyAccount.findUnique({
     where: { id: customerId },
-    include: { contact: true },
+    include: { contact: { select: { name: true, orgId: true, ...primaryIdentities } } },
   });
 
   if (!customer || (programId !== undefined && customer.programId !== programId)) {
@@ -1276,7 +1341,7 @@ export async function assignRewardToCustomer(
   });
 
   // Dispatch Notification
-  if (customer.contact?.phone && customer.contact?.orgId) {
+  if (contactFields(customer.contact.identities).phone && customer.contact?.orgId) {
     await sendLoyaltyEvent(
       customer.contact.orgId,
       LoyaltyEventType.REWARD_ISSUED,
@@ -1296,7 +1361,7 @@ export async function getRewardByShortCode(shortCode: string, orgId: string) {
       account: {
         include: {
           program: true,
-          contact: true,
+          contact: memberContactInclude,
         },
       },
       reward: true,
@@ -1311,7 +1376,7 @@ export async function getRewardByShortCode(shortCode: string, orgId: string) {
     throw new LoyaltyError("REWARD_NOT_FOUND", "Reward not found");
   }
 
-  return reward;
+  return { ...reward, account: withMemberContact(reward.account) };
 }
 
 export async function markRewardAsRedeemed(shortCode: string, orgId: string) {

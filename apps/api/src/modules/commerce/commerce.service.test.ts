@@ -363,8 +363,18 @@ describe("the order filter", () => {
     expect(where().contact).toEqual({
       OR: [
         { name: { contains: "ann", mode: "insensitive" } },
-        { phone: { contains: "ann", mode: "insensitive" } },
+        { id: { in: [] } }, // no digits in "ann": the phone branch matches nothing
       ],
+    });
+  });
+
+  test("a numeric search matches the customer's phone identity", async () => {
+    await getCommerceOrders(ORG, { page: 0, limit: 20, search: "+91 900" } as any);
+
+    expect(where().contact.OR[1]).toEqual({
+      identities: {
+        some: { kind: { in: ["PHONE"] }, value: { contains: "91900", mode: "insensitive" } },
+      },
     });
   });
 
@@ -877,7 +887,7 @@ describe("getCommerceOrders", () => {
     catalogId: CATALOG,
     products: [item({ price: 100, quantity: 2, currency: "INR" })],
     deliveryOption: { charge: 40 },
-    contact: { id: "c1", name: "Ann", phone: "919000000001" },
+    contact: { id: "c1", name: "Ann", identities: [{ kind: "PHONE", value: "919000000001" }] },
     ...over,
   });
 
@@ -945,7 +955,11 @@ describe("getAllCommerceOrders", () => {
         catalogId: CATALOG,
         products: [item({ price: 100, quantity: 2 })],
         deliveryOption: NO_DELIVERY_OPTION,
-        contact: { id: "c1", name: "Ann", phone: "919000000001" },
+        contact: {
+          id: "c1",
+          name: "Ann",
+          identities: [{ kind: "PHONE", value: "919000000001" }],
+        },
       },
     ]);
 

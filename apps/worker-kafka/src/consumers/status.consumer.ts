@@ -159,7 +159,7 @@ export async function startStatusConsumer(kafka: Kafka): Promise<StatusConsumer>
 
   log.info(
     `Kafka consumer subscribed to ${STATUS_EVENTS_TOPIC} (group ${GROUP_ID})` +
-      (tally.enabled ? " — status tally on (STATUS_TALLY=0 to silence)" : ""),
+      (tally.enabled ? " — status tally on (STATUS_TALLY_ENABLED=false to silence)" : ""),
   );
   return { consumer, producer };
 }

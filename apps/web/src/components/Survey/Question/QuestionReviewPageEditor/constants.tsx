@@ -4,49 +4,49 @@ const reviewPageLogosObj: Partial<Record<string, ReactNode>> = {
   Google: (
     <img
       className="size-4 object-contain"
-      src={`${import.meta.env.VITE_CLOUDFRONT_WEB_IMAGES_URL}/websurvey/review-page/logos/google.png`}
+      src={`${import.meta.env.VITE_WEB_IMAGES_CDN_URL}/websurvey/review-page/logos/google.png`}
       alt="Google logo"
     />
   ),
   Amazon: (
     <img
       className="size-4 object-contain"
-      src={`${import.meta.env.VITE_CLOUDFRONT_WEB_IMAGES_URL}/websurvey/review-page/logos/amazon.png`}
+      src={`${import.meta.env.VITE_WEB_IMAGES_CDN_URL}/websurvey/review-page/logos/amazon.png`}
       alt="Amazon"
     />
   ),
   Facebook: (
     <img
       className="size-4 object-contain"
-      src={`${import.meta.env.VITE_CLOUDFRONT_WEB_IMAGES_URL}/websurvey/review-page/logos/facebook.png`}
+      src={`${import.meta.env.VITE_WEB_IMAGES_CDN_URL}/websurvey/review-page/logos/facebook.png`}
       alt="Facebook"
     />
   ),
   Instagram: (
     <img
       className="size-4 object-contain"
-      src={`${import.meta.env.VITE_CLOUDFRONT_WEB_IMAGES_URL}/websurvey/review-page/logos/instagram.png`}
+      src={`${import.meta.env.VITE_WEB_IMAGES_CDN_URL}/websurvey/review-page/logos/instagram.png`}
       alt="Instagram"
     />
   ),
   MakeMyTrip: (
     <img
       className="size-4 object-contain"
-      src={`${import.meta.env.VITE_CLOUDFRONT_WEB_IMAGES_URL}/websurvey/review-page/logos/makemytrip.png`}
+      src={`${import.meta.env.VITE_WEB_IMAGES_CDN_URL}/websurvey/review-page/logos/makemytrip.png`}
       alt="MakeMyTrip"
     />
   ),
   Tripadvisor: (
     <img
       className="size-4 object-contain"
-      src={`${import.meta.env.VITE_CLOUDFRONT_WEB_IMAGES_URL}/websurvey/review-page/logos/tripadvisor.png`}
+      src={`${import.meta.env.VITE_WEB_IMAGES_CDN_URL}/websurvey/review-page/logos/tripadvisor.png`}
       alt="Tripadvisor"
     />
   ),
   Yelp: (
     <img
       className="size-4 object-contain"
-      src={`${import.meta.env.VITE_CLOUDFRONT_WEB_IMAGES_URL}/websurvey/review-page/logos/yelp.png`}
+      src={`${import.meta.env.VITE_WEB_IMAGES_CDN_URL}/websurvey/review-page/logos/yelp.png`}
       alt="Yelp"
     />
   ),

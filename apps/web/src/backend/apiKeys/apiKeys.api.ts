@@ -1,12 +1,12 @@
 import { axiosClient } from "../apiClient";
 
 /**
- * Partner API keys. Mirrors `rateup-api/src/modules/apiAccessToken` (the `/keys` and
+ * Partner API keys. Mirrors `apps/api/src/modules/settings/apiKeys` (the `/keys` and
  * `/usage` routes). Reads never return a key or its hash; the plaintext comes back only
  * from create and rotate, once.
  */
 
-const base = "/api-access-token";
+const base = "/api-keys";
 
 export type ApiKeyMode = "live" | "test";
 

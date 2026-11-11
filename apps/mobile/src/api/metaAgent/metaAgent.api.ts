@@ -2,7 +2,7 @@ import axios from "@/config/axios";
 
 /**
  * The Meta Business Agent (Meta AI on a WhatsApp number). Mirrors rateup-api's
- * `src/modules/metaAgent/metaAgent.route.ts` and rateup-ui's `metaAgent.api.ts`; the app
+ * `src/modules/meta/agent/metaAgent.route.ts` and rateup-ui's `metaAgent.api.ts`; the app
  * only reads usage and hands conversations back, setting the agent up stays on the web.
  * Every call here waits on Meta, so they get a longer timeout than the default.
  */

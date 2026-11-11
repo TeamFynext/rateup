@@ -9,11 +9,11 @@ export interface LeadgenFormQuestion {
   id?: string;
 }
 
-import { WHATSAPP_URL } from "..";
 import { axiosClient } from "../../apiClient";
 
-const SettingsUrl = `${WHATSAPP_URL}/settings`;
-const authUrl = `${WHATSAPP_URL}/auth`;
+const SettingsUrl = "/whatsapp/settings";
+const authUrl = "/whatsapp/auth";
+const iceBreakersUrl = "/whatsapp/ice-breakers";
 
 export type WaSettings = {
   id: string;
@@ -212,7 +212,7 @@ export interface ConversationalAutomation {
 }
 
 export const getConversationalAutomation = async (phoneId: string) => {
-  const res = await axiosClient.get(`${SettingsUrl}/conversational-automation/${phoneId}`);
+  const res = await axiosClient.get(`${iceBreakersUrl}/${phoneId}`);
   return res.data as ConversationalAutomation;
 };
 
@@ -223,12 +223,12 @@ export const updateConversationalAutomation = async ({
   phoneId: string;
   data: Partial<ConversationalAutomation>;
 }) => {
-  const res = await axiosClient.post(`${SettingsUrl}/conversational-automation/${phoneId}`, data);
+  const res = await axiosClient.post(`${iceBreakersUrl}/${phoneId}`, data);
   return res.data;
 };
 
 export const syncConversationalAutomation = async (phoneId: string) => {
-  const res = await axiosClient.post(`${SettingsUrl}/conversational-automation/${phoneId}/sync`);
+  const res = await axiosClient.post(`${iceBreakersUrl}/${phoneId}/sync`);
   return res.data as ConversationalAutomation;
 };
 

@@ -1,4 +1,5 @@
 import { log } from "./logger.js";
+import { envFlag } from "./envFlag.js";
 
 /**
  * Where Meta lives, and which version we speak. The only place either is
@@ -33,16 +34,16 @@ export function isNonProductionRuntime(env: Env = process.env): boolean {
  * It points every Graph call — with decrypted WABA tokens in the headers — at a stand-in
  * (`@rateup/meta-mock`). A copy-pasted variable once left the production worker aimed at
  * the dev mock, so outside a non-production runtime it is ignored unless
- * `ALLOW_META_MOCK=1` says the override is deliberate.
+ * `ALLOW_META_MOCK=true` says the override is deliberate.
  */
 export function resolveMetaBaseUrl(env: Env = process.env): string | null {
   const override = env.META_API_BASE_URL?.trim();
   if (!override) return null;
-  if (env.ALLOW_META_MOCK === "1" || isNonProductionRuntime(env)) return override;
+  if (envFlag("ALLOW_META_MOCK", false, env) || isNonProductionRuntime(env)) return override;
   log.error(
     { META_API_BASE_URL: override },
     "META_API_BASE_URL is set in production and is ignored; Graph calls go to Meta. " +
-      "Remove the variable, or set ALLOW_META_MOCK=1 if the override is intended.",
+      "Remove the variable, or set ALLOW_META_MOCK=true if the override is intended.",
   );
   return null;
 }

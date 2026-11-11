@@ -6,7 +6,7 @@ export const hubApiClient = axios.create({
   timeout: 8000,
   headers: {
     Accept: "application/json",
-    Authorization: `Bearer ${process.env.HUB_SPOT_PRIVATE_APP_ACCESS_TOKEN}`,
+    Authorization: `Bearer ${process.env.HUBSPOT_PRIVATE_APP_ACCESS_TOKEN}`,
   },
 });
 
@@ -20,7 +20,7 @@ interface hubSpotContact {
 
 export async function createHubSpotContact(_data: hubSpotContact, _hubSpotCompanyId: string) {
   try {
-    if (!process.env.HUB_SPOT_PRIVATE_APP_ACCESS_TOKEN) return false;
+    if (!process.env.HUBSPOT_PRIVATE_APP_ACCESS_TOKEN) return false;
   } catch (e) {
     log.error({ err: e }, "error creating hubspot contact");
   }
@@ -34,7 +34,7 @@ interface hubSpotCompany {
 
 export async function createHubSpotCompany(data: hubSpotCompany) {
   try {
-    if (!process.env.HUB_SPOT_PRIVATE_APP_ACCESS_TOKEN) return false;
+    if (!process.env.HUBSPOT_PRIVATE_APP_ACCESS_TOKEN) return false;
     const res = (
       await hubApiClient.post("/crm/v3/objects/companies", {
         properties: data,
@@ -48,7 +48,7 @@ export async function createHubSpotCompany(data: hubSpotCompany) {
 
 export async function getHubSpotCompanyByOwnerEmail(owner_email: string) {
   try {
-    if (!process.env.HUB_SPOT_PRIVATE_APP_ACCESS_TOKEN) return false;
+    if (!process.env.HUBSPOT_PRIVATE_APP_ACCESS_TOKEN) return false;
     const res = (
       await hubApiClient.get(`/crm/v3/objects/companies/${owner_email}?idProperty=owner_email`)
     ).data;

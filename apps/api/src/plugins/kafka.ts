@@ -11,7 +11,7 @@ declare module "fastify" {
   }
 }
 
-// Throws when neither KAFKA_BROKERS nor KAFKA_URL is set.
+// Throws when KAFKA_BROKERS is not set.
 const kafka = createKafkaClient();
 export const producer: Producer = kafka.producer(kafkaProducerConfig());
 

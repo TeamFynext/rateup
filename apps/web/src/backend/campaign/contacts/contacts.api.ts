@@ -26,7 +26,7 @@ export interface IUpdateContactLabel {
   description?: string;
 }
 
-export const CONTACT_BASE_URL = "/contact";
+export const CONTACT_BASE_URL = "/contacts";
 
 export const getContactsList = async (
   pagination: {
@@ -83,7 +83,7 @@ export interface ContactImportStarted {
 
 export type ContactImportState = "queued" | "running" | "completed" | "failed";
 
-/** `GET /contact/import/:jobId` — mirrors `ContactImportStatus` in rateup-api's contactImport.service.ts. */
+/** `GET /contacts/import/:jobId` — mirrors `ContactImportStatus` in rateup-api's contactImport.service.ts. */
 export interface ContactImportStatus {
   jobId: string;
   state: ContactImportState;

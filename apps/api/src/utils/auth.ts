@@ -1,7 +1,7 @@
 import prisma from "./prisma.js";
 import { FastifyReply, FastifyRequest } from "fastify";
 import { log } from "./logger.js";
-import { getSubscription } from "../modules/subscription/subscription.service.js";
+import { getSubscription } from "../modules/settings/subscription/subscription.service.js";
 import { SubscriptionFeaturePathName } from "../types/enums.js";
 import dayjs from "dayjs";
 import { getNestedProperty } from "./misc/obj.utils.js";
@@ -113,7 +113,7 @@ export function getVerifySubscriptionHandler(featurePathNames: Array<Subscriptio
 }
 
 export function isRootOrg(request: FastifyRequest): boolean {
-  return Boolean(request.user?.orgId) && request.user.orgId === process.env.ROOT_ORG;
+  return Boolean(request.user?.orgId) && request.user.orgId === process.env.ROOT_ORG_ID;
 }
 
 export function assertRootOrg(request: FastifyRequest, reply: FastifyReply, done: () => void) {

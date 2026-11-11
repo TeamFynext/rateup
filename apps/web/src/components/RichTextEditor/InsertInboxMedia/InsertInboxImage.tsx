@@ -7,6 +7,7 @@ import { toast } from "sonner";
 
 import { useMediaStore } from "@/components/whatsapp/inbox/chatdisplay/chatdisplayFooter/index.tsx";
 import { getApiErrorMessage } from "@/utils/apiError.ts";
+import { mediaUrl } from "@/utils/cdn";
 import { uploadFile } from "@/utils/file-upload/upload.ts";
 
 const InsertInboxImage = () => {
@@ -23,7 +24,7 @@ const InsertInboxImage = () => {
     try {
       for (const file of files) {
         const fileKey = await uploadFile(file);
-        const fileUrl = `${import.meta.env.VITE_AWS_CLOUDFRONT_URL}${fileKey}`;
+        const fileUrl = mediaUrl(fileKey);
 
         addMedia({
           type: "image",

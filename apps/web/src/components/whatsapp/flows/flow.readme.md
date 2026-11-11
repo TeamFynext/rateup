@@ -1,3 +1,0 @@
-# Flow architecture
-
-[//]: # "TODO:"

@@ -8,8 +8,8 @@ vi.mock("node:dns/promises", () => ({
 }));
 
 vi.hoisted(() => {
-  process.env.GOOGLE_OAUTH_CLIENT_ID = "google-client-id";
-  process.env.GOOGLE_OAUTH_CLIENT_SECRET = "google-client-secret";
+  process.env.GOOGLE_SHEETS_CLIENT_ID = "google-client-id";
+  process.env.GOOGLE_SHEETS_CLIENT_SECRET = "google-client-secret";
   process.env.FRONTEND_URL = "https://app.test.example";
 });
 
@@ -33,7 +33,7 @@ vi.mock("../../utils/logger.js", () => ({
   log: { error: vi.fn(), info: vi.fn(), trace: vi.fn(), warn: vi.fn(), debug: vi.fn() },
 }));
 
-vi.mock("../apiAccessToken/apiAccessToken.service.js", () => ({
+vi.mock("../settings/apiKeys/apiKey.service.js", () => ({
   generateApiKey: vi.fn(async () => ({ key: "plain-api-key", hash: "bcrypt-hash" })),
 }));
 
@@ -54,7 +54,7 @@ vi.mock("../commerce/shop/store.service.js", () => shopStore);
 
 import axios from "axios";
 import prisma from "../../utils/prisma.js";
-import { generateApiKey } from "../apiAccessToken/apiAccessToken.service.js";
+import { generateApiKey } from "../settings/apiKeys/apiKey.service.js";
 import { sendWhatsAppTemplateToCustomer } from "./shopify/shopify.messages.js";
 import {
   createIntegration,

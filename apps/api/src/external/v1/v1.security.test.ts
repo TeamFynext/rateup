@@ -35,7 +35,7 @@ const dashboard = vi.hoisted(() => ({
   getTemplateByIdAndOrgId: vi.fn(),
   sendTemplateToPhone: vi.fn(),
 }));
-vi.mock("../../modules/contact/contact.controller.js", () => ({
+vi.mock("../../modules/contacts/contact.controller.js", () => ({
   createContactHandler: dashboard.createContactHandler,
   createMultipleContactsHandler: dashboard.createMultipleContactsHandler,
   updateContactByIdHandler: dashboard.updateContactByIdHandler,
@@ -43,7 +43,7 @@ vi.mock("../../modules/contact/contact.controller.js", () => ({
   getAllContactsHandler: vi.fn(),
   getContactByIdHandler: vi.fn(),
 }));
-vi.mock("../../modules/contact/contactGroup/contactGroup.controller.js", () => ({
+vi.mock("../../modules/contacts/audiences/audience.controller.js", () => ({
   addExistingContactsToGroupHandler: vi.fn(),
   addNewContactsToGroupHandler: dashboard.addNewContactsToGroupHandler,
   createContactGroupHandler: vi.fn(),
@@ -53,28 +53,28 @@ vi.mock("../../modules/contact/contactGroup/contactGroup.controller.js", () => (
   removeContactsFromGroupHandler: vi.fn(),
   updateContactGroupHandler: vi.fn(),
 }));
-vi.mock("../../modules/campaign/campaign.controller.js", () => ({
+vi.mock("../../modules/campaigns/campaign.controller.js", () => ({
   createCampaignHandler: dashboard.createCampaignHandler,
   deleteCampaignByIdHandler: vi.fn(),
   getCampaignsHandler: vi.fn(),
   getResponseByCampaignByIdHandler: vi.fn(),
   sendCampaignHandler: vi.fn(),
 }));
-vi.mock("../../modules/campaign/campaignParticipants/campaignParticipants.controller.js", () => ({
+vi.mock("../../modules/campaigns/campaignParticipants/campaignParticipants.controller.js", () => ({
   createCampaignParticipantsFromContactsHandler: vi.fn(),
   getCampaignParticipantsByCampaignIdHandler: vi.fn(),
 }));
-vi.mock("../../modules/whatsapp/messageTemplates/wa_templates.controller.js", () => ({
+vi.mock("../../modules/meta/whatsapp/templates/templates.controller.js", () => ({
   sendTemplateToUserCore: dashboard.sendTemplateToUserCore,
 }));
-vi.mock("../../modules/whatsapp/messageTemplates/wa_templates.service.js", () => ({
+vi.mock("../../modules/meta/whatsapp/templates/templates.service.js", () => ({
   getTemplateByIdAndOrgId: dashboard.getTemplateByIdAndOrgId,
   getTemplatesByOrgIdAndTemplateType: vi.fn(),
 }));
-vi.mock("../../modules/whatsapp/settings/wa_settings.service.js", () => ({
+vi.mock("../../modules/meta/whatsapp/settings/settings.service.js", () => ({
   getWaSettings: vi.fn(),
 }));
-vi.mock("../../modules/whatsapp/wa_axios.js", () => ({ callMetaApi: vi.fn() }));
+vi.mock("../../modules/meta/whatsapp/wa_axios.js", () => ({ callMetaApi: vi.fn() }));
 vi.mock("./wa-templates/sendTemplateToPhone.js", () => ({
   sendTemplateToPhone: dashboard.sendTemplateToPhone,
 }));
@@ -146,7 +146,9 @@ describe("a. survey responses are scoped to the key's org", () => {
     const sql = (strings as string[]).join("?");
     expect(sql).toMatch(/s\."orgId"\s*=\s*\?::uuid/);
     expect(sql).not.toMatch(/WaFlow/);
-    expect(values).toEqual([ID(9), ORG]);
+    // The first value is the phone column's fragment, read from the contact's identities.
+    expect((values[0] as { sql: string }).sql).toContain('"ContactIdentity"');
+    expect(values.slice(1)).toEqual([ID(9), ORG]);
   });
 
   test("keeps v1's response shape", async () => {
@@ -263,7 +265,9 @@ describe("c. template sends refuse another org's team", () => {
 
   test("send-to-contacts reaches only the org's contacts", async () => {
     dashboard.getTemplateByIdAndOrgId.mockResolvedValue({ id: "tpl" });
-    db.contact.findMany.mockResolvedValue([{ id: ID(1), phone: "919876543210" }]);
+    db.contact.findMany.mockResolvedValue([
+      { id: ID(1), identities: [{ kind: "PHONE", value: "919876543210" }] },
+    ]);
     const reply = fakeReply();
     await sendTemplatesToContactsExternalController(
       req({ params: { templateId: "tpl" }, body: { contactIds: [ID(1), ID(2)] } }),

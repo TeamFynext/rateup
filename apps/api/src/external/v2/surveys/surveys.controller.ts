@@ -1,6 +1,7 @@
 import type { FastifyRequest } from "fastify";
 
 import prisma from "../../../utils/prisma.js";
+import { primaryIdentities } from "../../../modules/contacts/identity/contactFields.js";
 import { ExternalApiError } from "../../shared/errors.js";
 import {
   cursorOrderBy,
@@ -67,7 +68,7 @@ export async function listSurveyResponsesHandler(
       responses: true,
       encryptedResponses: true,
       surveyTeamMap: { select: { teamId: true } },
-      Contact: { select: { phone: true } },
+      Contact: { select: primaryIdentities },
     },
     orderBy: cursorOrderBy,
     take: limit + 1,

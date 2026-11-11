@@ -1,7 +1,7 @@
 import z from "zod";
 import { ZapierTriggers } from "./zapier.types.js";
 import { WaMessageAssignStatus } from "../../../../types/enums.js";
-import { contactCoreSchema, updateContactSchema } from "../../../contact/contact.schema.js";
+import { contactCoreSchema, updateContactSchema } from "../../../contacts/contact.schema.js";
 
 //any changes to schema should affect in integration created in zapier
 

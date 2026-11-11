@@ -48,6 +48,7 @@ import { useDisclosure } from "@/hooks/useDisclosure";
 import { cn } from "@/lib/utils";
 import { useContactsStore } from "@/store/inbox.store.ts";
 import { MessagePlatform } from "@/types/enums.ts";
+import { mediaUrl } from "@/utils/cdn";
 import { uploadFile } from "@/utils/file-upload/upload.ts";
 import { getContactChannelSource, isInboxSessionExpired } from "@/utils/whatsapp/inbox.ts";
 
@@ -396,7 +397,7 @@ function WaTextEditor({
       for (const file of files) {
         try {
           const fileKey = await uploadFile(file);
-          const fileUrl = `${import.meta.env.VITE_AWS_CLOUDFRONT_URL}${fileKey}`;
+          const fileUrl = mediaUrl(fileKey);
 
           const type = file.type.startsWith("image/")
             ? "image"

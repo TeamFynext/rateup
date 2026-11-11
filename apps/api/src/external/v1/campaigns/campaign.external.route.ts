@@ -4,7 +4,7 @@ import {
   campaignResponseByIdSchema,
   byCampaignIdParamsSchema,
   sendCampaignInputSchema,
-} from "../../../modules/campaign/campaign.schema.js";
+} from "../../../modules/campaigns/campaign.schema.js";
 import {
   createCampaignExternalController,
   deleteCampaignByIdExternalController,

@@ -3,6 +3,7 @@ import { useTranslation } from "react-i18next";
 
 import { HoverCard, HoverCardContent, HoverCardTrigger } from "@/components/ui/hover-card.tsx";
 import { WaQuestions } from "@/types/enums.ts";
+import { mediaUrl } from "@/utils/cdn";
 import { toText } from "@/utils/toText";
 
 export const WaHoverCardComponent = ({ content, type }: { content: unknown; type: string }) => {
@@ -14,7 +15,7 @@ export const WaHoverCardComponent = ({ content, type }: { content: unknown; type
       <HoverCardTrigger className="cursor-default">
         {type === WaQuestions.PhotoPicker ? (
           <img
-            src={`${import.meta.env.VITE_AWS_CLOUDFRONT_URL}${text}`}
+            src={mediaUrl(text)}
             className="h-[40px] w-[30px] object-cover"
             loading="lazy"
             alt={translations("answer image of question")}
@@ -28,7 +29,7 @@ export const WaHoverCardComponent = ({ content, type }: { content: unknown; type
         <ScrollArea className="max-h-[250px]">
           {type === WaQuestions.PhotoPicker ? (
             <img
-              src={`${import.meta.env.VITE_AWS_CLOUDFRONT_URL}${text}`}
+              src={mediaUrl(text)}
               className="w-[200px]"
               loading="lazy"
               alt={translations("answer image of question")}

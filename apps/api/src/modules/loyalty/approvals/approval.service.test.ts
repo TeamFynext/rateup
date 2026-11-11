@@ -29,11 +29,11 @@ vi.mock("../../../utils/logger.js", () => ({
 }));
 
 vi.mock("../messaging/send.js", () => ({ sendLoyaltyEvent: vi.fn() }));
-vi.mock("../../notification/notify.js", () => ({ notify: vi.fn() }));
+vi.mock("../../settings/notifications/notify.js", () => ({ notify: vi.fn() }));
 
 import prisma from "../../../utils/prisma.js";
 import { sendLoyaltyEvent } from "../messaging/send.js";
-import { notify } from "../../notification/notify.js";
+import { notify } from "../../settings/notifications/notify.js";
 import { LoyaltyEventType } from "../../../types/enums.js";
 import {
   approveApprovalRequest,
@@ -78,7 +78,7 @@ interface ApprovalFixture {
   requestData: Record<string, unknown>;
   expiresAt: Date | null;
   account: {
-    contact: { name: string; phone: string; orgId: string };
+    contact: { name: string; orgId: string; identities: { kind: string; value: string }[] };
     currentTier: { id: string; name: string } | null;
   };
 }
@@ -95,7 +95,7 @@ function approval(over: Record<string, unknown> = {}) {
     requestData: {},
     expiresAt: null,
     account: {
-      contact: { name: "Ann", phone: "919000000001", orgId: ORG },
+      contact: { name: "Ann", orgId: ORG, identities: [{ kind: "PHONE", value: "919000000001" }] },
       currentTier: { id: "tier-1", name: "Bronze" },
     },
   };
@@ -117,12 +117,20 @@ beforeEach(() => {
   db.approvalRequest.create.mockResolvedValue({
     id: "apr-1",
     requestType: "POINTS_ADJUSTMENT",
-    account: { programId: PROGRAM, contact: { name: "Ann", phone: "+911" } },
+    account: {
+      programId: PROGRAM,
+      contact: { name: "Ann", identities: [{ kind: "PHONE", value: "911" }] },
+    },
   });
   db.loyaltyProgram.findUnique.mockResolvedValue({ orgId: "org-1" });
   db.approvalRequest.findFirst.mockResolvedValue(approval());
   db.approvalRequest.findMany.mockResolvedValue([]);
-  db.approvalRequest.update.mockResolvedValue({ id: "apr-1", status: "APPROVED" });
+  // The update includes the account like every other read of the row.
+  db.approvalRequest.update.mockResolvedValue({
+    id: "apr-1",
+    status: "APPROVED",
+    account: approval().account,
+  });
   db.approvalRequest.updateMany.mockResolvedValue({ count: 0 });
   db.approvalRequest.count.mockResolvedValue(0);
   db.customerLoyaltyAccount.findUnique.mockResolvedValue({

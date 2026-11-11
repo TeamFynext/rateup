@@ -6,10 +6,10 @@ vi.mock("../../../utils/logger.js", () => ({
   log: { error: vi.fn(), warn: vi.fn(), info: vi.fn(), trace: vi.fn(), debug: vi.fn() },
 }));
 vi.mock("../../../utils/rateLimit.js", () => ({ rateLimit: () => async () => {} }));
-vi.mock("../../../modules/campaign/campaignRetry.service.js", () => ({
+vi.mock("../../../modules/campaigns/campaignRetry.service.js", () => ({
   upsertCampaignRetryPolicy: vi.fn(),
 }));
-vi.mock("../../../modules/subscription/subscription.service.js", () => ({
+vi.mock("../../../modules/settings/subscription/subscription.service.js", () => ({
   getSubscription: vi.fn(),
 }));
 vi.mock("../../../utils/prisma.js", () => ({
@@ -25,19 +25,19 @@ vi.mock("../../../utils/prisma.js", () => ({
     surveyResponse: { findMany: vi.fn() },
   },
 }));
-vi.mock("../../../modules/campaign/campaign.service.js", () => ({
+vi.mock("../../../modules/campaigns/campaign.service.js", () => ({
   createCampaign: vi.fn(),
   deleteCampaign: vi.fn(),
   enqueueCampaignMessage: vi.fn(),
   updateCampaign: vi.fn(),
 }));
-vi.mock("../../../modules/campaign/campaign.preflight.js", () => ({
+vi.mock("../../../modules/campaigns/campaign.preflight.js", () => ({
   getCampaignSendPreflight: vi.fn(),
 }));
-vi.mock("../../../modules/campaign/campaignPause.service.js", () => ({
+vi.mock("../../../modules/campaigns/campaignPause.service.js", () => ({
   clearCampaignPause: vi.fn(),
 }));
-vi.mock("../../../modules/campaign/campaignSend.service.js", () => {
+vi.mock("../../../modules/campaigns/campaignSend.service.js", () => {
   class CampaignSendInProgressError extends Error {}
   return {
     CampaignSendInProgressError,
@@ -47,29 +47,29 @@ vi.mock("../../../modules/campaign/campaignSend.service.js", () => {
     getLiveCampaignSend: vi.fn(),
   };
 });
-vi.mock("../../../modules/campaign/campaignParticipants/campaignParticipants.service.js", () => ({
+vi.mock("../../../modules/campaigns/campaignParticipants/campaignParticipants.service.js", () => ({
   createCampaignParticipants: vi.fn(),
 }));
-vi.mock("../../../modules/subscription/campaignCredits.js", () => ({
+vi.mock("../../../modules/settings/subscription/campaignCredits.js", () => ({
   getCampaignCreditBudget: vi.fn(),
 }));
 
 import prismaModule from "../../../utils/prisma.js";
-import { getSubscription } from "../../../modules/subscription/subscription.service.js";
+import { getSubscription } from "../../../modules/settings/subscription/subscription.service.js";
 import {
   createCampaign,
   deleteCampaign,
   enqueueCampaignMessage,
   updateCampaign,
-} from "../../../modules/campaign/campaign.service.js";
-import { getCampaignSendPreflight } from "../../../modules/campaign/campaign.preflight.js";
+} from "../../../modules/campaigns/campaign.service.js";
+import { getCampaignSendPreflight } from "../../../modules/campaigns/campaign.preflight.js";
 import {
   CampaignSendInProgressError,
   createCampaignSend,
   failCampaignSend,
-} from "../../../modules/campaign/campaignSend.service.js";
-import { createCampaignParticipants } from "../../../modules/campaign/campaignParticipants/campaignParticipants.service.js";
-import { CampaignNotFoundError } from "../../../modules/campaign/campaign.errors.js";
+} from "../../../modules/campaigns/campaignSend.service.js";
+import { createCampaignParticipants } from "../../../modules/campaigns/campaignParticipants/campaignParticipants.service.js";
+import { CampaignNotFoundError } from "../../../modules/campaigns/campaign.errors.js";
 import { externalErrorHandler } from "../../shared/errors.js";
 import { externalCampaignRoutes } from "./campaigns.route.js";
 
@@ -292,7 +292,7 @@ describe("org scoping", () => {
         responses: [{ questionId: "q1", type: "RATING", response: { RATING: 5 } }],
         encryptedResponses: null,
         surveyTeamMap: { teamId: TEAM_ID },
-        Contact: { phone: "+919000000001" },
+        Contact: { identities: [{ kind: "PHONE", value: "+919000000001" }] },
         ip: "10.0.0.1",
       },
     ]);

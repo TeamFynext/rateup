@@ -4,7 +4,6 @@ import { toast } from "sonner";
 import type { WaFlowJson, WaFlowWa } from "@/types/global";
 import { getApiErrorData } from "@/utils/apiError.ts";
 
-import { WHATSAPP_URL } from "..";
 import { axiosClient as ac } from "../../apiClient";
 
 const axiosInstanceConfig: CreateAxiosDefaults = {
@@ -20,7 +19,7 @@ axiosClient.interceptors.response.use(undefined, (error) => {
   return Promise.reject(error);
 });
 
-const BASE = `${WHATSAPP_URL}/flows`;
+const BASE = "/whatsapp/flows";
 
 /**
  * @param whatsappSettingsPhoneId only flows that live on this number's WABA. Flow ids

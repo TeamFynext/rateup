@@ -16,6 +16,8 @@ export type Permission =
   | "contacts.read"
   | "contacts.manage"
   | "contacts.merge"
+  | "pipelines.read"
+  | "pipelines.manage"
   | "meta_agent.read"
   | "meta_agent.use"
   | "meta_agent.manage"

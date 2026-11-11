@@ -6,7 +6,7 @@ import { completeFeatures, formatLimit, isUnlimited, LIMITS, SWITCHES } from "./
 
 /**
  * The keys rateup-api's staff schema requires (`subscriptionFeaturesSchema` in
- * src/modules/staff/orgs/subscription.schema.ts). Every save sends a whole blob, so one
+ * src/modules/platform/staff/orgs/subscription.schema.ts). Every save sends a whole blob, so one
  * missing key here makes every override and plan edit fail validation.
  */
 const REQUIRED_SHAPE = {

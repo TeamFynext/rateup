@@ -1,7 +1,7 @@
 import prisma from "../../../utils/prisma.js";
 import { log } from "../../../utils/logger.js";
 import { IntegratedApps } from "../../../types/enums.js";
-import { getWaSettings } from "../../whatsapp/settings/wa_settings.service.js";
+import { getWaSettings } from "../../meta/whatsapp/settings/settings.service.js";
 import { generateMetaPaymentOauthLink, listMetaPaymentConfigurations } from "./wapayment.meta.js";
 import {
   readWaPaymentConfigurations,

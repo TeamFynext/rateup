@@ -3,7 +3,7 @@ import { downloadBlob } from "@/utils/downloadBlob.ts";
 
 import { axiosClient } from "../../apiClient";
 
-const RESPONSE_URL = "/response";
+const RESPONSE_URL = "/surveys/responses";
 
 export async function getResponses(surveyTeamMapId: string) {
   const res = await axiosClient.get(`${RESPONSE_URL}/${surveyTeamMapId}`);

@@ -5,7 +5,6 @@ import {
   Pressable,
   ActivityIndicator,
   Text,
-  Modal,
   ScrollView,
   useColorScheme,
 } from "react-native";
@@ -26,9 +25,10 @@ import {
   resolveMimeType,
   type PickedFile,
 } from "@/utils/attachments";
-import Tap from "@/components/common/Tap";
 import { selectRowForContact, useMessagesStore, useContactsStore } from "@/store/inboxStore";
 import { VoiceNoteBar, VoiceNoteMic, useVoiceNote, type VoiceNoteFile } from "./VoiceNote";
+import LocationSheet, { type SharedLocation } from "./LocationSheet";
+import ComposerActionMenu from "./ComposerActionMenu";
 import { mediaPreviewActions, useMediaPreviewStore } from "@/utils/mediaPreview";
 import { router } from "expo-router";
 import { prepareSharedFile, useSharedFilesStore } from "@/utils/sharedFiles";
@@ -39,9 +39,11 @@ import {
   VideoIcon,
   MusicIcon,
   File,
+  MapPin,
   Paperclip,
   Plus,
   Send,
+  Square,
   StickyNote,
   X,
   Zap,
@@ -57,7 +59,6 @@ import { quickReplyToWhatsAppText } from "@/utils/quickReplyText";
 import { useMention } from "./mention/useMention";
 import { generateInternalMessageId } from "@/utils/chatbox_utils";
 import { getInboxRowTheme } from "@/constants/inboxDesign";
-import { FONT } from "@/components/loyalty/cashier/ui";
 import { Toast } from "@/components/common/Notice";
 import { useAuth } from "@/context/AuthContext";
 import { useLoggedInUser } from "@/api/api";
@@ -71,6 +72,7 @@ import Animated, {
 import { MessagePlatform } from "@/constants/enums";
 import { logger } from "@/utils/logger";
 import { useReplyTargetStore } from "@/store/replyTargetStore";
+import { mediaUrl } from "@/utils/cdn";
 
 type FormValues = {
   type: "text" | "media" | "contact" | "location";
@@ -205,17 +207,6 @@ const MessageSendPanel = ({
     }
   }, [media, setValue, watch]);
 
-  const values = watch();
-
-  useEffect(() => {
-    if (values.type === "location" && values.location) {
-      handleSend();
-    }
-    // Fires on the form values only. `handleSend` is redeclared every render, so
-    // depending on it would re-send the location on each keystroke.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [values]);
-
   useEffect(() => {
     if (audioUrl) {
       setBody({
@@ -320,6 +311,21 @@ const MessageSendPanel = ({
   const { canSell } = useCommerceAccess();
   const sellChannel = canSell ? chatChannelFor(platform) : null;
   const [sellSheet, setSellSheet] = useState<ChatSellSheet>(null);
+  const [locationSheetOpen, setLocationSheetOpen] = useState(false);
+  const openLocationSheet = () => {
+    rotateValue.value = withTiming(0, { duration: 200 });
+    setTemplateOptionsVisible(false);
+    setLocationSheetOpen(true);
+  };
+  // Templates are WhatsApp only: they go to the contact's phone through a WhatsApp number,
+  // so on Instagram or Messenger they would fail, or reach the customer on the wrong app.
+  const canSendTemplate = platform === MessagePlatform.WHATSAPP;
+  // The plus button opens a menu of these; with none, the button is hidden.
+  const hasComposerActions = canSendTemplate || Boolean(sellChannel);
+  const openTemplates = () => {
+    setTemplateModalVisible(true);
+    setTemplateOptionsVisible(false);
+  };
   const openSellSheet = (sheet: Exclude<ChatSellSheet, null>) => {
     rotateValue.value = withTiming(0, { duration: 200 });
     setTemplateOptionsVisible(false);
@@ -389,7 +395,7 @@ const MessageSendPanel = ({
           key,
           type: file.kind,
           name: file.name,
-          url: `${process.env.EXPO_PUBLIC_AWS_CLOUDFRONT_URL}${key}`,
+          url: mediaUrl(key),
           uploading: false,
         });
       } catch (err) {
@@ -544,6 +550,18 @@ const MessageSendPanel = ({
       bg: isDark ? "#122210" : "#EAF3DE",
       color: isDark ? "#7ac44d" : "#3B6D11",
     },
+    ...(platform === MessagePlatform.WHATSAPP
+      ? [
+          {
+            key: "location",
+            label: "Location",
+            Icon: MapPin,
+            onPress: openLocationSheet,
+            bg: isDark ? "#2a1418" : "#FDECEC",
+            color: isDark ? "#f08078" : "#C4342C",
+          },
+        ]
+      : []),
   ];
 
   const handleSendPrivateMessage = handleSubmit((values) => {
@@ -603,29 +621,30 @@ const MessageSendPanel = ({
     mention.reset();
   });
 
-  // A voice note goes out on its own, as in WhatsApp, leaving the draft alone. On WhatsApp
+  // A voice note goes out on its own, as in WhatsApp, leaving the draft alone. It is
+  // uploaded as soon as recording stops, so Send only has to deliver the key. On WhatsApp
   // it is converted to OGG/Opus and flagged, so the customer gets a voice message (mic,
   // profile photo, transcript) rather than an audio file; Instagram and Messenger take
   // the recording as it is.
-  const sendVoiceNote = async ({ uri }: VoiceNoteFile) => {
-    const asVoice = platform === MessagePlatform.WHATSAPP;
-    const name = `voice-${Date.now()}.m4a`;
-    let key: string;
+  const asVoiceNote = platform === MessagePlatform.WHATSAPP;
+  const uploadVoiceNote = async ({ uri }: VoiceNoteFile) => {
     try {
-      key = await uploadFile(
-        { uri, name, type: "audio/mp4" } as unknown as globalThis.File,
+      return await uploadFile(
+        { uri, name: `voice-${Date.now()}.m4a`, type: "audio/mp4" } as unknown as globalThis.File,
         false,
         undefined,
-        { voiceNote: asVoice },
+        { voiceNote: asVoiceNote },
       );
     } catch (err) {
       Toast.error(
         typeof err === "string" && err
-          ? `Voice note not sent. ${err}`
-          : "Voice note not sent. Check your connection and try again.",
+          ? `Voice note not uploaded. ${err}`
+          : "Voice note not uploaded. Check your connection, then tap send to retry.",
       );
       throw err;
     }
+  };
+  const deliverVoiceNote = (key: string) =>
     deliver({
       ...initialMessgabody,
       type: "media",
@@ -634,13 +653,19 @@ const MessageSendPanel = ({
           key,
           type: "audio",
           name: "Voice message",
-          url: `${process.env.EXPO_PUBLIC_AWS_CLOUDFRONT_URL}${key}`,
-          ...(asVoice && { voice: true }),
+          url: mediaUrl(key),
+          ...(asVoiceNote && { voice: true }),
         },
       ],
     });
-  };
-  const voice = useVoiceNote({ onSend: sendVoiceNote });
+  const sendLocation = (location: SharedLocation) =>
+    deliver({ ...initialMessgabody, type: "location", location });
+
+  const voice = useVoiceNote({
+    upload: uploadVoiceNote,
+    deliver: deliverVoiceNote,
+    removeUpload: (key) => void deleteUploadedFiles({ fileKeyArray: [{ Key: key }] }),
+  });
   // WhatsApp's rule: the mic stands where Send is until there is something to send.
   const showMic =
     !isPrivate &&
@@ -664,8 +689,9 @@ const MessageSendPanel = ({
         messageBody: {
           exchangeProcess: "send",
           send: {
-            type: first ? first.type : "text",
+            type: values.type === "location" ? "location" : first ? first.type : "text",
             text: values.text,
+            ...(values.type === "location" && { location: values.location }),
             ...(first && {
               [first.type]: {
                 link: first.url,
@@ -677,23 +703,28 @@ const MessageSendPanel = ({
         },
         sender: { name: "You" },
       };
-      useMessagesStore
-        .getState()
-        .addMessage(`${contactId}_${whatsappSettingsPhoneId}`, mockedMessage);
-      useMessagesStore.getState().addMessage(`${contactId}_all`, mockedMessage);
+      // The placeholder is cosmetic: if showing it fails, the message must still go out.
+      try {
+        useMessagesStore
+          .getState()
+          .addMessage(`${contactId}_${whatsappSettingsPhoneId}`, mockedMessage);
+        useMessagesStore.getState().addMessage(`${contactId}_all`, mockedMessage);
 
-      useContactsStore.getState().updateContactById(
-        contactId,
-        (c) => {
-          if (!c) return c;
-          return {
-            ...c,
-            lastMessage: mockedMessage,
-            lastReceivedMessageTimeStamp: new Date().toISOString(),
-          };
-        },
-        false,
-      );
+        useContactsStore.getState().updateContactById(
+          contactId,
+          (c) => {
+            if (!c) return c;
+            return {
+              ...c,
+              lastMessage: mockedMessage,
+              lastReceivedMessageTimeStamp: new Date().toISOString(),
+            };
+          },
+          false,
+        );
+      } catch (err) {
+        logger.error("Could not show the sending placeholder:", err);
+      }
 
       sendnewWaMessage.mutate(values, {
         // Backstop for the placeholder. A text send is usually retired the
@@ -1046,7 +1077,7 @@ const MessageSendPanel = ({
                 gap: 10,
               }}
             >
-              {!isPrivate && voice.phase === "idle" && (
+              {!isPrivate && voice.phase === "idle" && hasComposerActions && (
                 <Pressable onPress={togglePanel}>
                   <View
                     style={{
@@ -1066,69 +1097,19 @@ const MessageSendPanel = ({
               )}
 
               {!isPrivate && templateOptionsVisible && (
-                <View
-                  style={{
-                    position: "absolute",
-                    bottom: 50,
-                    left: 0,
-                    borderRadius: 12,
-                    padding: 8,
-                    zIndex: 50,
-                    backgroundColor: Colors.brand.blue,
-                  }}
-                >
-                  <Tap
-                    style={{ paddingVertical: 4, paddingHorizontal: 12 }}
-                    pressedStyle={{ opacity: 0.6 }}
-                    onPress={() => {
-                      setTemplateModalVisible(true);
-                      setTemplateOptionsVisible(false);
-                    }}
-                  >
-                    <Text
-                      style={{
-                        color: "#fff",
-                        fontSize: 13,
-                        fontFamily: "InstrumentSans_600SemiBold",
-                      }}
-                    >
-                      Send Template
-                    </Text>
-                  </Tap>
-                  {sellChannel && (
-                    <>
-                      <Pressable
-                        style={{ paddingVertical: 4, paddingHorizontal: 12, marginTop: 6 }}
-                        onPress={() => openSellSheet("products")}
-                      >
-                        <Text
-                          style={{
-                            color: "#fff",
-                            fontSize: 13,
-                            fontFamily: FONT.semibold,
-                          }}
-                        >
-                          Send products
-                        </Text>
-                      </Pressable>
-                      <Pressable
-                        style={{ paddingVertical: 4, paddingHorizontal: 12, marginTop: 6 }}
-                        onPress={() => openSellSheet("order")}
-                      >
-                        <Text
-                          style={{
-                            color: "#fff",
-                            fontSize: 13,
-                            fontFamily: FONT.semibold,
-                          }}
-                        >
-                          Create order
-                        </Text>
-                      </Pressable>
-                    </>
-                  )}
-                </View>
+                <ComposerActionMenu
+                  isDark={isDark}
+                  onTemplate={canSendTemplate ? openTemplates : undefined}
+                  onProducts={sellChannel ? () => openSellSheet("products") : undefined}
+                  onOrder={sellChannel ? () => openSellSheet("order") : undefined}
+                />
               )}
+
+              <LocationSheet
+                visible={locationSheetOpen}
+                onClose={() => setLocationSheetOpen(false)}
+                onSend={sendLocation}
+              />
 
               {sellChannel && (
                 <ChatSellSheets
@@ -1140,83 +1121,12 @@ const MessageSendPanel = ({
                 />
               )}
 
-              <Modal
+              <TemplateSending
                 visible={templateModalVisible}
-                transparent
-                animationType="fade"
-                onRequestClose={() => setTemplateModalVisible(false)}
-              >
-                <View
-                  style={{
-                    flex: 1,
-                    backgroundColor: "rgba(0,0,0,0.3)",
-                    justifyContent: "center",
-                    alignItems: "center",
-                    paddingHorizontal: 16,
-                  }}
-                >
-                  <View
-                    style={{
-                      backgroundColor: isDark ? Colors.dark.surface : "#fff",
-                      width: "100%",
-                      borderRadius: 16,
-                      overflow: "hidden",
-                      maxHeight: "80%",
-                      minHeight: "50%",
-                    }}
-                  >
-                    <View
-                      style={{
-                        flexDirection: "row",
-                        justifyContent: "space-between",
-                        alignItems: "center",
-                        paddingHorizontal: 16,
-                        paddingVertical: 12,
-                        borderBottomWidth: 1,
-                        borderBottomColor: isDark ? Colors.dark.border : "#e5e7eb",
-                        backgroundColor: Colors.brand.blue,
-                      }}
-                    >
-                      <Text
-                        style={{
-                          color: "#fff",
-                          fontSize: 16,
-                          fontFamily: "InstrumentSans_700Bold",
-                          flex: 1,
-                        }}
-                      >
-                        Send Template
-                      </Text>
-                      <Pressable
-                        onPress={() => setTemplateModalVisible(false)}
-                        style={{
-                          width: 32,
-                          height: 32,
-                          borderRadius: 16,
-                          backgroundColor: "rgba(255,255,255,0.2)",
-                          alignItems: "center",
-                          justifyContent: "center",
-                        }}
-                      >
-                        <Text style={{ color: "#fff", fontSize: 18, fontWeight: "bold" }}>×</Text>
-                      </Pressable>
-                    </View>
-
-                    <ScrollView
-                      contentContainerStyle={{
-                        padding: 16,
-                        paddingBottom: 32,
-                      }}
-                      style={{ backgroundColor: isDark ? Colors.dark.surface : "#fff" }}
-                    >
-                      <TemplateSending
-                        onClose={() => setTemplateModalVisible(false)}
-                        contact={selectedContactId}
-                      />
-                    </ScrollView>
-                  </View>
-                </View>
-              </Modal>
+                onClose={() => setTemplateModalVisible(false)}
+                contactId={selectedContactId}
+                defaultAccountId={whatsappSettingsPhoneId}
+              />
 
               {voice.phase !== "idle" && voice.phase !== "starting" ? (
                 <VoiceNoteBar voice={voice} isDark={isDark} />
@@ -1295,26 +1205,34 @@ const MessageSendPanel = ({
               ) : (
                 <Pressable
                   onPress={() => {
-                    if (voice.phase === "locked" || voice.phase === "review") void voice.send();
+                    if (voice.phase === "locked") void voice.stop();
+                    else if (voice.phase === "review") void voice.send();
                     else if (isPrivate) void handleSendPrivateMessage();
                     else void handleSend();
                   }}
                   disabled={isUploading || voice.phase === "sending"}
                   accessibilityRole="button"
-                  accessibilityLabel="Send"
+                  accessibilityLabel={voice.phase === "locked" ? "Stop recording" : "Send"}
                 >
                   <View
                     style={{
                       width: 42,
                       height: 42,
                       borderRadius: 21,
-                      backgroundColor: isPrivate ? Colors.accent.orange : Colors.brand.blue,
+                      backgroundColor:
+                        voice.phase === "locked"
+                          ? "#E5484D"
+                          : isPrivate
+                            ? Colors.accent.orange
+                            : Colors.brand.blue,
                       alignItems: "center",
                       justifyContent: "center",
                     }}
                   >
                     {isUploading || voice.phase === "sending" ? (
                       <ActivityIndicator size="small" color="#fff" />
+                    ) : voice.phase === "locked" ? (
+                      <Square size={16} color="#fff" fill="#fff" />
                     ) : (
                       <Send size={18} color="#fff" />
                     )}
@@ -1335,129 +1253,35 @@ const MessageSendPanel = ({
             gap: 10,
           }}
         >
-          <Pressable onPress={togglePanel}>
-            <View
-              style={{
-                width: 38,
-                height: 38,
-                borderRadius: 19,
-                backgroundColor: Colors.brand.blue,
-                alignItems: "center",
-                justifyContent: "center",
-              }}
-            >
-              <Animated.View style={animatedPlusStyle}>
-                <Plus size={18} color="#fff" />
-              </Animated.View>
-            </View>
-          </Pressable>
-
-          {templateOptionsVisible && (
-            <View
-              style={{
-                position: "absolute",
-                bottom: 50,
-                left: 0,
-                borderRadius: 12,
-                padding: 8,
-                zIndex: 50,
-                backgroundColor: Colors.brand.blue,
-              }}
-            >
-              <Tap
-                style={{ paddingVertical: 4, paddingHorizontal: 12 }}
-                pressedStyle={{ opacity: 0.6 }}
-                onPress={() => {
-                  setTemplateModalVisible(true);
-                  setTemplateOptionsVisible(false);
-                }}
-              >
-                <Text
-                  style={{ color: "#fff", fontSize: 13, fontFamily: "InstrumentSans_600SemiBold" }}
-                >
-                  Send Template
-                </Text>
-              </Tap>
-            </View>
-          )}
-
-          <Modal
-            visible={templateModalVisible}
-            transparent
-            animationType="fade"
-            onRequestClose={() => setTemplateModalVisible(false)}
-          >
-            <View
-              style={{
-                flex: 1,
-                backgroundColor: "rgba(0,0,0,0.3)",
-                justifyContent: "center",
-                alignItems: "center",
-                paddingHorizontal: 16,
-              }}
-            >
+          {canSendTemplate && (
+            <Pressable onPress={togglePanel}>
               <View
                 style={{
-                  backgroundColor: isDark ? Colors.dark.surface : "#fff",
-                  width: "100%",
-                  borderRadius: 16,
-                  overflow: "hidden",
-                  maxHeight: "80%",
-                  minHeight: "50%",
+                  width: 38,
+                  height: 38,
+                  borderRadius: 19,
+                  backgroundColor: Colors.brand.blue,
+                  alignItems: "center",
+                  justifyContent: "center",
                 }}
               >
-                <View
-                  style={{
-                    flexDirection: "row",
-                    justifyContent: "space-between",
-                    alignItems: "center",
-                    paddingHorizontal: 16,
-                    paddingVertical: 12,
-                    borderBottomWidth: 1,
-                    borderBottomColor: isDark ? Colors.dark.border : "#e5e7eb",
-                    backgroundColor: Colors.brand.blue,
-                  }}
-                >
-                  <Text
-                    style={{
-                      color: "#fff",
-                      fontSize: 16,
-                      fontFamily: "InstrumentSans_700Bold",
-                      flex: 1,
-                    }}
-                  >
-                    Send Template
-                  </Text>
-                  <Pressable
-                    onPress={() => setTemplateModalVisible(false)}
-                    style={{
-                      width: 32,
-                      height: 32,
-                      borderRadius: 16,
-                      backgroundColor: "rgba(255,255,255,0.2)",
-                      alignItems: "center",
-                      justifyContent: "center",
-                    }}
-                  >
-                    <Text style={{ color: "#fff", fontSize: 18, fontWeight: "bold" }}>×</Text>
-                  </Pressable>
-                </View>
-
-                <ScrollView
-                  contentContainerStyle={{
-                    padding: 16,
-                    paddingBottom: 32,
-                  }}
-                  style={{ backgroundColor: isDark ? Colors.dark.surface : "#fff" }}
-                >
-                  <TemplateSending
-                    onClose={() => setTemplateModalVisible(false)}
-                    contact={selectedContactId}
-                  />
-                </ScrollView>
+                <Animated.View style={animatedPlusStyle}>
+                  <Plus size={18} color="#fff" />
+                </Animated.View>
               </View>
-            </View>
-          </Modal>
+            </Pressable>
+          )}
+
+          {canSendTemplate && templateOptionsVisible && (
+            <ComposerActionMenu isDark={isDark} onTemplate={openTemplates} />
+          )}
+
+          <TemplateSending
+            visible={templateModalVisible}
+            onClose={() => setTemplateModalVisible(false)}
+            contactId={selectedContactId}
+            defaultAccountId={whatsappSettingsPhoneId}
+          />
 
           <View
             style={{

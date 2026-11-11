@@ -11,6 +11,6 @@ export interface BookDemo {
 }
 
 export async function bookDemo(data: BookDemo) {
-  const res = await axiosClient.post("/bookdemo", data);
+  const res = await axiosClient.post("/book-demo", data);
   return res.data;
 }

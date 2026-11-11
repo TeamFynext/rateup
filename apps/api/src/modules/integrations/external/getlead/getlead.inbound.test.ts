@@ -30,13 +30,13 @@ vi.mock("./getlead.push.js", () => ({
 
 const moveLead = vi.fn();
 const createLead = vi.fn();
-vi.mock("../../../pipeline/pipelineLead/lead.service.js", () => ({
+vi.mock("../../../pipelines/pipelineLead/lead.service.js", () => ({
   moveLead: (...args: unknown[]) => moveLead(...args),
   createLead: (...args: unknown[]) => createLead(...args),
 }));
 
 const createContact = vi.fn();
-vi.mock("../../../contact/contact.service.js", () => ({
+vi.mock("../../../contacts/contact.service.js", () => ({
   createContact: (...args: unknown[]) => createContact(...args),
 }));
 
@@ -248,7 +248,11 @@ describe("applyGetLeadInbound", () => {
     expect(result).toMatchObject({ applied: true, leadId: "lead-9" });
     // Rateup stores E.164 without the leading plus.
     expect(contact.findFirst).toHaveBeenLastCalledWith(
-      expect.objectContaining({ where: expect.objectContaining({ phone: "919400651372" }) }),
+      expect.objectContaining({
+        where: expect.objectContaining({
+          identities: { some: { kind: "PHONE", value: "919400651372" } },
+        }),
+      }),
     );
   });
 

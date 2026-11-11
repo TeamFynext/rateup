@@ -1,7 +1,7 @@
 import { parsePhoneNumberFromString } from "libphonenumber-js";
 import z from "zod";
 
-import { isBsuid } from "../../modules/whatsapp/bsuid.js";
+import { isBsuid } from "../../modules/meta/whatsapp/bsuid.js";
 
 const EXAMPLE = "Digits with the country code, no `+`, e.g. 919876543210";
 
@@ -68,13 +68,4 @@ export function toWirePhone(phone: string | null | undefined): string | null {
   if (phone == null) return null;
   const digits = phone.replace(/\D/g, "");
   return digits || null;
-}
-
-/**
- * Every way a digits-only phone may be stored on Contact.phone. Most rows hold digits, but some
- * paths stored a leading `+`; a lookup or duplicate check that only tried the digits would miss
- * those rows and create a second contact for the same person.
- */
-export function storedPhoneSpellings(digits: string): string[] {
-  return [digits, `+${digits}`];
 }

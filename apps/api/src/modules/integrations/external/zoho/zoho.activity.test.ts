@@ -16,7 +16,7 @@ vi.mock("../../../../workers/bullmq/queues/index.js", () => ({
   zapierTriggerQueue: { add: vi.fn() },
 }));
 
-vi.mock("../../../pipeline/pipelineLead/lead.service.js", () => ({
+vi.mock("../../../pipelines/pipelineLead/lead.service.js", () => ({
   moveLead: vi.fn(),
   resolvePipelineForContact: vi.fn(),
   setContactStage: vi.fn(),

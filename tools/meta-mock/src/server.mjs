@@ -34,7 +34,7 @@ import { listWebhooks, replayWebhook } from "./webhooks.mjs";
 export function createMetaMock(options = {}) {
   const port = Number(options.port ?? process.env.PORT ?? 8081);
   const host = options.host ?? process.env.META_MOCK_HOST ?? "127.0.0.1";
-  const verbose = options.verbose ?? process.env.META_MOCK_VERBOSE === "1";
+  const verbose = options.verbose ?? process.env.META_MOCK_VERBOSE === "true";
 
   /**
    * Which API wins on the endpoints WhatsApp and Instagram share, when the
@@ -50,7 +50,7 @@ export function createMetaMock(options = {}) {
     "http://localhost:3001/api/wa/webhook";
 
   /**
-   * The app secret webhooks are signed with — the app's `waclient_secret`.
+   * The app secret webhooks are signed with — the app's `META_APP_SECRET`.
    * rateup-api refuses unsigned deliveries unless META_WEBHOOK_SIGNATURES is
    * `log` or `off`, so without this every callback is answered 401.
    */
@@ -65,7 +65,7 @@ export function createMetaMock(options = {}) {
    * unconditionally, which is why message-dispatcher's dev setup expects it.
    */
   const statusProgression =
-    options.statusProgression ?? process.env.META_MOCK_STATUS_PROGRESSION === "1";
+    options.statusProgression ?? process.env.META_MOCK_STATUS_PROGRESSION === "true";
 
   /** Identity stamped onto status callbacks, so the app can resolve the tenant. */
   const identity = {

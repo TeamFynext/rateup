@@ -148,7 +148,7 @@ export async function updateZohoLeadQueue(
  * Tells Zoho CRM a lead changed column, through the org's status mapping.
  *
  * The one place `Lead_Status` is pushed from. Both callers — the board's
- * {@link import("../../../pipeline/pipelineLead/lead.service.js").moveLead} fan-out
+ * {@link import("../../../pipelines/pipelineLead/lead.service.js").moveLead} fan-out
  * and the contact write paths — used to enqueue the Rateup name directly, so
  * neither respected the mapping the org configured in the "Lead Status Mapping"
  * dialog even though the inbound sync has always read it.

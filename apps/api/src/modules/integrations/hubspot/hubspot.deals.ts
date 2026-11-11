@@ -4,7 +4,7 @@ import type { Integration } from "../../../generated/prisma/client.js";
 import prisma from "../../../utils/prisma.js";
 import { IntegratedApps } from "../../../types/enums.js";
 import { integrationTriggerQueue } from "../../../workers/bullmq/queues/index.js";
-import { LEADS_PIPELINE_TYPE } from "../../pipeline/pipelineTypes.js";
+import { LEADS_PIPELINE_TYPE } from "../../pipelines/pipelineTypes.js";
 import type { IntegrationEvent } from "../events/integrationEvent.types.js";
 import type {
   IntegrationEventContext,
@@ -16,6 +16,7 @@ import {
   recordLink,
   removeLink,
 } from "../shared/entityLink.js";
+import { noteContactSelect, toNoteContact } from "../shared/activityNotes.js";
 import { hubSpotClientFor } from "./hubspot.auth.js";
 import { HUBSPOT_JOB_OPTIONS, hubSpotContactIdFor } from "./hubspot.contacts.js";
 import { readHubSpotCredential, type HubSpotPipeline } from "./hubspot.types.js";
@@ -95,7 +96,7 @@ export async function processHubSpotDealJob(
       name: true,
       stageId: true,
       pipeline: { select: { orgId: true, type: true } },
-      contact: { select: { id: true, name: true, email: true, phone: true } },
+      contact: { select: noteContactSelect },
     },
   });
   if (
@@ -137,7 +138,7 @@ export async function processHubSpotDealJob(
   }
 
   const contactId = lead.contact
-    ? await hubSpotContactIdFor(integration, client, lead.contact)
+    ? await hubSpotContactIdFor(integration, client, toNoteContact(lead.contact))
     : null;
   const response = await client.post<{ id: string }>("/crm/v3/objects/deals", {
     properties,

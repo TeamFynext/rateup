@@ -33,7 +33,7 @@ export interface IEditTeam {
 
 export const createTeam = (data: ICreateTeam) =>
   axiosClient({
-    url: `/team`,
+    url: `/teams`,
     method: "POST",
     data: data,
   });
@@ -41,7 +41,7 @@ export const createTeam = (data: ICreateTeam) =>
 export const editTeam = (teamId: string, data: IEditTeam, onlyTag?: boolean) => {
   const query = onlyTag ? "?onlytag=true" : "";
   return axiosClient({
-    url: `/team/edit/${teamId}${query}`,
+    url: `/teams/edit/${teamId}${query}`,
     method: "PUT",
     data: data,
   });
@@ -49,34 +49,34 @@ export const editTeam = (teamId: string, data: IEditTeam, onlyTag?: boolean) => 
 
 export const getTeamsByOrg = (orgId: string) =>
   axiosClient({
-    url: `/team/${orgId}`,
+    url: `/teams/${orgId}`,
     method: "GET",
   });
 
 export async function getTeamsByUser() {
-  const teams: TeamsResponse = (await axiosClient.get("/team/user")).data;
+  const teams: TeamsResponse = (await axiosClient.get("/teams/user")).data;
   return teams;
 }
 
 export const deleteTeamById = (id: string) =>
   axiosClient({
-    url: `/team/${id}`,
+    url: `/teams/${id}`,
     method: "DELETE",
   });
 
 export const inviteTeamMember = async (data: IInviteMember) =>
   axiosClient({
-    url: `/team/invite`,
+    url: `/teams/invite`,
     method: "POST",
     data: data,
   });
 
 export const resendInviteTeamMember = async (id: string) => {
-  const Response = await axiosClient.put(`/team/invite/resend/${id}`, {});
+  const Response = await axiosClient.put(`/teams/invite/resend/${id}`, {});
   return Response?.data;
 };
 
-/** What `POST /team/complete-invite/:token` answers with once the invitation is accepted. */
+/** What `POST /teams/complete-invite/:token` answers with once the invitation is accepted. */
 export interface CompleteInviteResponse {
   message: string;
   data: {
@@ -96,42 +96,42 @@ export interface CompleteInviteResponse {
 /** Rejects with HTTP 410 when the token is unknown, already used or expired. */
 export const completeInvite = (inviteToken: string) =>
   axiosClient<CompleteInviteResponse>({
-    url: `/team/complete-invite/${inviteToken}`,
+    url: `/teams/complete-invite/${inviteToken}`,
     method: "POST",
     timeout: 30000,
   });
 
 export const deleteInviteById = (id: string) =>
   axiosClient({
-    url: `/team/invite/${id}`,
+    url: `/teams/invite/${id}`,
     method: "DELETE",
   });
 
 export const getTeamMembers = (teamId: string) =>
   axiosClient({
-    url: `/team/members/${teamId}`,
+    url: `/teams/members/${teamId}`,
     method: "GET",
   });
 
 export const getNotTeamMembers = (teamId: string) =>
   axiosClient({
-    url: `/team/notmembers/${teamId}`,
+    url: `/teams/notmembers/${teamId}`,
     method: "GET",
   });
 
 export async function getTeamMembersFromInvitation(teamId: string) {
-  const teamData = (await axiosClient.get(`/team/invitation/${teamId}`)).data;
+  const teamData = (await axiosClient.get(`/teams/invitation/${teamId}`)).data;
   return teamData;
 }
 
 export const getTeamSurveys = (teamId: string) =>
   axiosClient({
-    url: `/survey/team/${teamId}`,
+    url: `/surveys/team/${teamId}`,
     method: "GET",
   });
 
 export async function getSurveyLanguagesFromTeam(teamId: string) {
-  const res = await axiosClient.get(`/team/${teamId}/survey-languages`);
+  const res = await axiosClient.get(`/teams/${teamId}/survey-languages`);
   return res.data as string[];
 }
 
@@ -144,15 +144,15 @@ export async function addUsertoTeams({
   teamIds: string[];
   userEmail: string;
 }) {
-  await axiosClient.post(`/team/members/${userId}`, { teamIds, userEmail });
+  await axiosClient.post(`/teams/members/${userId}`, { teamIds, userEmail });
 }
 
 export async function removeUserFromTeam({ teamId, userId }: { teamId: string; userId: string }) {
-  await axiosClient.delete(`/team/member?teamId=${teamId}&userId=${userId}`);
+  await axiosClient.delete(`/teams/member?teamId=${teamId}&userId=${userId}`);
 }
 
 export async function getTeamById(teamId: string) {
-  const res = await axiosClient.get(`/team/teams/${teamId}`);
+  const res = await axiosClient.get(`/teams/teams/${teamId}`);
   return res.data;
 }
 
@@ -185,7 +185,7 @@ export interface UpdateTeamChannelsInput {
 }
 
 export async function getTeamChannels(teamId: string): Promise<TeamChannelsResponse> {
-  const res = await axiosClient.get(`/team/${teamId}/channels`);
+  const res = await axiosClient.get(`/teams/${teamId}/channels`);
   return res.data;
 }
 
@@ -193,6 +193,6 @@ export async function updateTeamChannels(
   teamId: string,
   input: UpdateTeamChannelsInput,
 ): Promise<TeamChannelsResponse> {
-  const res = await axiosClient.put(`/team/${teamId}/channels`, input);
+  const res = await axiosClient.put(`/teams/${teamId}/channels`, input);
   return res.data;
 }

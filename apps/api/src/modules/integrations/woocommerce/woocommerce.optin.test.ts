@@ -4,18 +4,30 @@ vi.mock("../../../utils/logger.js", () => ({
   log: { error: vi.fn(), info: vi.fn(), warn: vi.fn(), debug: vi.fn(), trace: vi.fn() },
 }));
 vi.mock("../../../utils/prisma.js", () => ({
-  default: { contact: { findUnique: vi.fn(), update: vi.fn() } },
+  default: { contact: { findFirst: vi.fn(), update: vi.fn() } },
+}));
+vi.mock("../../contacts/identity/contactFields.js", async (importOriginal) => ({
+  ...(await importOriginal<object>()),
+  setPrimaryIdentities: vi.fn(),
 }));
 vi.mock("../../../utils/redisConnection.js", () => ({ default: {} }));
-vi.mock("../../contact/contact.service.js", () => ({ createContact: vi.fn() }));
+vi.mock("../../contacts/contact.service.js", () => ({ createContact: vi.fn() }));
 
 import prisma from "../../../utils/prisma.js";
-import { createContact } from "../../contact/contact.service.js";
+import { setPrimaryIdentities } from "../../contacts/identity/contactFields.js";
+import { createContact } from "../../contacts/contact.service.js";
 import { handleWooOrderOptIn, readWooOptIn } from "./woocommerce.optin.js";
 import type { WooCredential } from "./woocommerce.types.js";
 
 type Mock = ReturnType<typeof vi.fn>;
-const findContact = prisma.contact.findUnique as unknown as Mock;
+const findContact = prisma.contact.findFirst as unknown as Mock;
+const setIdentities = setPrimaryIdentities as unknown as Mock;
+
+/** A contact row as the database holds it: its email is a primary identity. */
+const row = ({ email, ...rest }: { email: string | null } & Record<string, unknown>) => ({
+  ...rest,
+  identities: email ? [{ kind: "EMAIL", value: email }] : [],
+});
 const updateContact = prisma.contact.update as unknown as Mock;
 
 const NOW = Date.parse("2026-10-17T10:00:00Z");
@@ -110,35 +122,47 @@ describe("the checkout opt-in on an order", () => {
   });
 
   test("ticked, an existing contact is opted in, and only its blanks are filled", async () => {
-    findContact.mockResolvedValue({ id: "c-1", name: "Asha N", email: null, consent: false });
+    findContact.mockResolvedValue(row({ id: "c-1", name: "Asha N", email: null, consent: false }));
 
     expect(await run()).toBe("updated");
-    expect(updateContact).toHaveBeenCalledWith({
-      where: { id: "c-1" },
-      data: { email: "asha@example.com", consent: true },
-    });
+    expect(updateContact).toHaveBeenCalledWith({ where: { id: "c-1" }, data: { consent: true } });
+    expect(setIdentities).toHaveBeenCalledWith(
+      "org-1",
+      "c-1",
+      { email: "asha@example.com" },
+      "IMPORT",
+    );
     expect(createContact).not.toHaveBeenCalled();
   });
 
   test("unticked, an existing contact keeps its consent", async () => {
-    findContact.mockResolvedValue({ id: "c-1", name: "", email: null, consent: true });
+    findContact.mockResolvedValue(row({ id: "c-1", name: "", email: null, consent: true }));
 
     await run(order("no"));
     expect(updateContact).toHaveBeenCalledWith({
       where: { id: "c-1" },
-      data: { name: "Asha Nair", email: "asha@example.com" },
+      data: { name: "Asha Nair" },
     });
+    expect(setIdentities).toHaveBeenCalledWith(
+      "org-1",
+      "c-1",
+      { email: "asha@example.com" },
+      "IMPORT",
+    );
   });
 
   test("an existing contact with nothing to change is not written", async () => {
-    findContact.mockResolvedValue({
-      id: "c-1",
-      name: "Asha",
-      email: "a@example.com",
-      consent: false,
-    });
+    findContact.mockResolvedValue(
+      row({
+        id: "c-1",
+        name: "Asha",
+        email: "a@example.com",
+        consent: false,
+      }),
+    );
     await run(order("no"));
     expect(updateContact).not.toHaveBeenCalled();
+    expect(setIdentities).not.toHaveBeenCalled();
   });
 
   test("applied once per order: order.created and order.updated arriving together", async () => {
@@ -148,7 +172,7 @@ describe("the checkout opt-in on an order", () => {
   });
 
   test("an old order's update does not opt anyone back in", async () => {
-    findContact.mockResolvedValue({ id: "c-1", name: "Asha", email: "a@b.c", consent: false });
+    findContact.mockResolvedValue(row({ id: "c-1", name: "Asha", email: "a@b.c", consent: false }));
     expect(await run(order("yes", { date_created_gmt: "2026-09-01T09:00:00" }))).toBe("too_old");
     expect(updateContact).not.toHaveBeenCalled();
   });
@@ -164,13 +188,19 @@ describe("the checkout opt-in on an order", () => {
     (createContact as Mock).mockRejectedValue(Object.assign(new Error("dup"), { code: "P2002" }));
     findContact
       .mockResolvedValueOnce(null)
-      .mockResolvedValueOnce({ id: "c-2", name: "", email: null, consent: true });
+      .mockResolvedValueOnce(row({ id: "c-2", name: "", email: null, consent: true }));
 
     expect(await run()).toBe("updated");
     expect(updateContact).toHaveBeenCalledWith({
       where: { id: "c-2" },
-      data: { name: "Asha Nair", email: "asha@example.com" },
+      data: { name: "Asha Nair" },
     });
+    expect(setIdentities).toHaveBeenCalledWith(
+      "org-1",
+      "c-2",
+      { email: "asha@example.com" },
+      "IMPORT",
+    );
   });
 
   test("a failure frees the order for the retry", async () => {

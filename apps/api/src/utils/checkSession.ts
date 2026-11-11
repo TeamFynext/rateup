@@ -2,8 +2,8 @@ import { FastifyRequest, FastifyReply } from "fastify";
 import { log } from "./logger.js";
 import Session from "supertokens-node/recipe/session/index.js";
 import { auditLogHook } from "./auditLog.js";
-import { getOrgIdAndRole } from "../modules/user/user.service.js";
-import { allowSuspendedThrough } from "../authz/authorize.js";
+import { getOrgIdAndRole } from "../modules/settings/user/user.service.js";
+import { allowSuspendedThrough, logSessionFailure } from "../authz/authorize.js";
 import { isUserBlocked } from "../authz/actor.js";
 
 /**
@@ -56,7 +56,7 @@ export const checkSession = async (request: FastifyRequest, reply: FastifyReply)
     // Log audit info
     await auditLogHook(request, reply);
   } catch (err) {
-    log.error({ err }, "Error checking session");
+    logSessionFailure(err);
     reply.code(401).send({ message: "Not authorized" });
   }
 };

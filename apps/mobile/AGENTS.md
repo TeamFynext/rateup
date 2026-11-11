@@ -6,13 +6,16 @@ is an Expo app (React Native, Expo Router file routes) that talks to rateup-api.
 
 ## Commands
 
-This app is its own pnpm install, not part of the root workspace: `pnpm-workspace.yaml` here
-sets `nodeLinker: hoisted` (the flat node_modules Expo was built on) and `pnpm-lock.yaml` here
-is its lockfile. Shared monorepo code comes in as `link:` dependencies (`@rateup/utils`), which
-`metro.config.js` adds to Metro's watch folders. Run every command below in this folder.
+This app is part of the root pnpm workspace, with pnpm's default isolated `node_modules`
+(Expo SDK 54+ supports it; no `nodeLinker: hoisted`). Install from the monorepo root with
+`vp install`; the lockfile is the root `pnpm-lock.yaml`. Shared code comes in as `workspace:*`
+dependencies (`@rateup/utils`), and `metro.config.js` watches the root `node_modules` and
+`packages/*`. Add a dependency with `pnpm exec expo install <pkg>`, which picks the version Expo
+SDK 58 expects. Expo pins react, react-dom, @types/react, TypeScript 6 and Tailwind 3, so those
+stay plain versions here; other shared libraries use `"catalog:"` like the rest of the repo.
+Run every command below in this folder.
 
 ```bash
-pnpm install                  # or `pnpm run install:mobile` at the monorepo root
 pnpm start                    # Expo dev server (expo start)
 pnpm run android              # native build + run (expo run:android); `source use-java17.sh` first
 pnpm run ios                  # native build + run (expo run:ios)

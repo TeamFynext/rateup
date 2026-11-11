@@ -22,5 +22,5 @@ export type QuickReply = {
 };
 
 export async function getQuickReplies(): Promise<QuickReply[]> {
-  return (await axios.get(`/api/wa/inbox/quick-reply`)).data;
+  return (await axios.get(`/api/inbox/quick-reply`)).data;
 }

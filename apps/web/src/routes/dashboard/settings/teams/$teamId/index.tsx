@@ -27,7 +27,7 @@ function TeamManagement() {
     strict: false,
   });
   const { data: teamsData, isPending } = useGetTeamById(teamId ?? "");
-  // `/team/:id` returns the team row with no members relation, so the count comes from the
+  // `/teams/:id` returns the team row with no members relation, so the count comes from the
   // query the Members tab already caches.
   const { data: teamMembersData } = useTeamMembersFromInvitation(teamId ?? "");
   const { can } = usePermissions();

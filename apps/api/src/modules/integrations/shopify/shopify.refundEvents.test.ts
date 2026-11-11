@@ -29,38 +29,40 @@ vi.mock("./shopify.session.js", () => ({
   saveShopifySession: vi.fn(),
   updateShopifySessionScope: vi.fn(),
 }));
-vi.mock("../../whatsapp/automatedReply/wa_automatedReply.utils.js", () => ({
+vi.mock("../../automation/rules/rules.utils.js", () => ({
   checkAndExecuteRuleByTriggerEvent: vi.fn(),
 }));
 // Leaves the service only calls at runtime, stubbed so the import graph stays cheap.
-vi.mock("../../whatsapp/whatsappSurvey/wasurvey.service.js", () => ({ sendMessage: vi.fn() }));
-vi.mock("../../whatsapp/whatsappSurvey/wasurvey.controller.js", () => ({
+vi.mock("../../meta/whatsapp/webhook/whatsapp.service.js", () => ({ sendMessage: vi.fn() }));
+vi.mock("../../meta/whatsapp/webhook/whatsapp.controller.js", () => ({
   convertComponentForSenting: vi.fn(),
   updateButtonText: vi.fn(),
   wait: vi.fn(),
 }));
-vi.mock("../../stats/stats.service.js", () => ({ updateMonthlyStat: vi.fn() }));
-vi.mock("../../whatsapp/whatsappSurvey/wasurvey.utils.js", () => ({
+vi.mock("../../analytics/stats/stats.service.js", () => ({ updateMonthlyStat: vi.fn() }));
+vi.mock("../../meta/whatsapp/webhook/whatsapp.utils.js", () => ({
   createTemplateMessage: vi.fn(),
   validateSession: vi.fn(),
 }));
-vi.mock("../../whatsapp/messageTemplates/wa_templates.service.js", () => ({
+vi.mock("../../meta/whatsapp/templates/templates.service.js", () => ({
   getDbTemplate: vi.fn(),
 }));
-vi.mock("../../whatsapp/messageTemplates/wa_templates.utils.js", () => ({
+vi.mock("../../meta/whatsapp/templates/templates.utils.js", () => ({
   getFlowIdFromTemplateComponents: vi.fn(),
 }));
-vi.mock("../../whatsapp/messageTemplates/wa_templates.controller.js", () => ({
+vi.mock("../../meta/whatsapp/templates/templates.controller.js", () => ({
   sendTemplateToUserCore: vi.fn(),
 }));
-vi.mock("../../whatsapp/messageTemplates/wa_templates.auth.js", () => ({
+vi.mock("../../meta/whatsapp/templates/templates.auth.js", () => ({
   verifyTemplateMessageLimit: vi.fn(),
 }));
-vi.mock("../../subscription/subscription.service.js", () => ({ getSubscription: vi.fn() }));
-vi.mock("../../org/org.services.js", () => ({ pauseOrg: vi.fn() }));
+vi.mock("../../settings/subscription/subscription.service.js", () => ({
+  getSubscription: vi.fn(),
+}));
+vi.mock("../../settings/org/org.services.js", () => ({ pauseOrg: vi.fn() }));
 
 import prisma from "../../../utils/prisma.js";
-import { checkAndExecuteRuleByTriggerEvent } from "../../whatsapp/automatedReply/wa_automatedReply.utils.js";
+import { checkAndExecuteRuleByTriggerEvent } from "../../automation/rules/rules.utils.js";
 import { ShopifyEvents } from "../../../types/enums.js";
 import { handleWebhook } from "./shopify.inbound.js";
 import type { ShopifyWebhookJobData } from "./shopify.types.js";

@@ -1,4 +1,4 @@
-import { getTemplateByIdAndOrgId } from "../../../modules/whatsapp/messageTemplates/wa_templates.service.js";
+import { getTemplateByIdAndOrgId } from "../../../modules/meta/whatsapp/templates/templates.service.js";
 import {
   WaTemplateComponentType,
   WaTemplateSupportedFormats,

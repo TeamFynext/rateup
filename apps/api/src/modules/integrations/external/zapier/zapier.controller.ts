@@ -6,7 +6,7 @@ import { log } from "../../../../utils/logger.js";
 import { assertPublicUrl } from "../../../../utils/ssrf.js";
 import { getIntegrationByName, updateIntegrationByName } from "../../integrations.service.js";
 import { IntegratedApps } from "../../../../types/enums.js";
-import { ByOrgIdParams } from "../../../org/org.schema.js";
+import { ByOrgIdParams } from "../../../settings/org/org.schema.js";
 import bcrypt from "bcrypt";
 import { Role } from "../../../../generated/prisma/client.js";
 import {
@@ -14,8 +14,8 @@ import {
   getContactById,
   updateContactById,
   updateContactLabelsById,
-} from "../../../contact/contact.service.js";
-import { sendTextMessage } from "../../../whatsapp/whatsappSurvey/wasurvey.service.js";
+} from "../../../contacts/contact.service.js";
+import { sendTextMessage } from "../../../meta/whatsapp/webhook/whatsapp.service.js";
 import {
   deleteContactByPhoneNumberAndOrgId,
   getContactsByPhoneNumberAndOrgId,
@@ -28,9 +28,9 @@ import {
   addNewContactsToGroup,
   getContactGroupsByOrgId,
   getContactGroupsByTeamId,
-} from "../../../contact/contactGroup/contactGroup.service.js";
-import { getTeamsByOrgId, inviteTeamMember } from "../../../team/team.service.js";
-import { InviteType } from "../../../team/team.schema.js";
+} from "../../../contacts/audiences/audience.service.js";
+import { getTeamsByOrgId, inviteTeamMember } from "../../../settings/teams/team.service.js";
+import { InviteType } from "../../../settings/teams/team.schema.js";
 import {
   ContactLabelSchema,
   InviteMemberRequestSchema,
@@ -41,7 +41,7 @@ import {
   ZapierCreateContactSchema,
   ZapierUpdateContactSchema,
 } from "./zapier.schema.js";
-import { createContactHandler as createContact } from "../../../contact/contact.controller.js";
+import { createContactHandler as createContact } from "../../../contacts/contact.controller.js";
 import { findForeignContactRef } from "../../../../external/v1/contacts/contactRefs.js";
 
 export async function zapierAuthenticationHandler(

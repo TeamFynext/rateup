@@ -74,6 +74,18 @@ const contact = (over: Record<string, unknown> = {}) => ({
   ...over,
 });
 
+/** The same contact as the database holds it: phone and email are primary identities. */
+const contactRow = (over: Record<string, unknown> = {}) => {
+  const { email, phone, ...rest } = contact(over);
+  return {
+    ...rest,
+    identities: [
+      ...(phone ? [{ kind: "PHONE", value: phone }] : []),
+      ...(email ? [{ kind: "EMAIL", value: email }] : []),
+    ],
+  };
+};
+
 const FIELDS = { name: "Asha Nair", email: "asha@example.com", phone: "+919876543210" };
 
 const job = (contactId = "c-1") => ({
@@ -98,7 +110,7 @@ const persons = new Map<string, unknown>();
 beforeEach(() => {
   vi.clearAllMocks();
   persons.clear();
-  findContact.mockResolvedValue(contact());
+  findContact.mockResolvedValue(contactRow());
   findLink.mockResolvedValue(null);
   redis.set.mockResolvedValue("OK");
   client.post.mockResolvedValue({ data: { data: { id: 501 } } });
@@ -165,7 +177,7 @@ describe("sending a contact", () => {
   });
 
   test("a contact from another org is not sent", async () => {
-    findContact.mockResolvedValue(contact({ orgId: "org-2" }));
+    findContact.mockResolvedValue(contactRow({ orgId: "org-2" }));
     expect(await processPipedriveContactJob(integration(), job())).toBe("contact_gone");
   });
 

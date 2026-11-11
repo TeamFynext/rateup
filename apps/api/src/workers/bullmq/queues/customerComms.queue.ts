@@ -6,7 +6,7 @@ export type CustomerCommsJob =
   | { kind: "broadcast"; broadcastId: string };
 
 /**
- * RateUp messaging its own customers (modules/customerComms). `send` delivers one
+ * RateUp messaging its own customers (modules/platform/customerComms). `send` delivers one
  * CustomerMessage row; `broadcast` fires a scheduled Broadcast and fans out its sends.
  * The rows are the source of truth, and each job re-reads its row before acting.
  */

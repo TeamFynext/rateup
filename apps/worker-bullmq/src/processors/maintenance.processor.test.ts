@@ -27,11 +27,11 @@ vi.mock("@rateup/api/utils/prisma.js", () => ({
   default: { staffAuditLog: { update: auditUpdate } },
 }));
 const findTask = vi.hoisted(() => vi.fn());
-vi.mock("@rateup/api/modules/maintenance/maintenance.tasks.js", () => ({ findTask }));
+vi.mock("@rateup/api/modules/platform/maintenance/maintenance.tasks.js", () => ({ findTask }));
 
 const { processMaintenanceRun } = await import("./maintenance.processor.js");
 const { newBackgroundRun, readBackgroundRun, updateBackgroundRun } =
-  await import("@rateup/api/modules/maintenance/backgroundRun.js");
+  await import("@rateup/api/modules/platform/maintenance/backgroundRun.js");
 
 const job = (taskId: string) =>
   ({ data: { taskId, auditId: "audit-1" }, attemptsMade: 0, updateProgress: vi.fn() }) as never;

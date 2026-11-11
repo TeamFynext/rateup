@@ -1,7 +1,7 @@
 import type { AxiosRequestConfig } from "axios";
 
 import { log } from "../../../utils/logger.js";
-import { callMetaApi, GraphApiError } from "../../whatsapp/wa_axios.js";
+import { callMetaApi, GraphApiError } from "../../meta/whatsapp/wa_axios.js";
 import { WaPaymentError, type WaPaymentConfiguration } from "./wapayment.types.js";
 
 /** The WhatsApp account the calls are made for: its WABA and token. */

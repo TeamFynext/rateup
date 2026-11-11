@@ -21,8 +21,8 @@ vi.mock("./shopify/shopify.orders.js", () => ({
   handleShopifyRefundEvent: vi.fn(),
 }));
 vi.mock("./shopify/shopify.billing.js", () => ({ handleSubscriptionUpdateFromShopify: vi.fn() }));
-vi.mock("../org/org.services.js", () => ({ pauseOrg: vi.fn() }));
-vi.mock("../notification/notify.js", () => ({ notify: vi.fn() }));
+vi.mock("../settings/org/org.services.js", () => ({ pauseOrg: vi.fn() }));
+vi.mock("../settings/notifications/notify.js", () => ({ notify: vi.fn() }));
 vi.mock("./woocommerce/woocommerce.connect.js", () => ({
   removeWooWebhooks: vi.fn(),
   syncWooWebhooks: vi.fn(),

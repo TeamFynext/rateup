@@ -8,8 +8,8 @@ import {
 } from "./shopify.checkouts.service.js";
 import { ShopifyEvents } from "../../../types/enums.js";
 import dayjs from "dayjs";
-import { pauseOrg } from "../../org/org.services.js";
-import { notify } from "../../notification/notify.js";
+import { pauseOrg } from "../../settings/org/org.services.js";
+import { notify } from "../../settings/notifications/notify.js";
 import {
   getShopifyIntegrationByShop,
   updateShopifyIntegrationByShop,

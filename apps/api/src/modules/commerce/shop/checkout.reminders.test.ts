@@ -16,7 +16,7 @@ vi.mock("../../../utils/prisma.js", () => ({ default: {} }));
 vi.mock("../../../utils/redisConnection.js", () => ({ default: redis }));
 vi.mock("../../../utils/logger.js", () => ({ log: { warn: vi.fn(), info: vi.fn() } }));
 vi.mock("../../../workers/bullmq/queues/shop.queue.js", () => ({ armShopReminder: vi.fn() }));
-vi.mock("../../whatsapp/catalog/catalogSettings.service.js", () => ({
+vi.mock("../catalogs/catalogSettings.service.js", () => ({
   sendAddressFlowToCustomer: vi.fn(),
 }));
 

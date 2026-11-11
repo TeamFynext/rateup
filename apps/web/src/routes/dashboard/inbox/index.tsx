@@ -34,6 +34,9 @@ export const Route = createFileRoute("/dashboard/inbox/")({
     history: search.history === true || search.history === "true" ? true : undefined,
     // Searches the list for the contact, so it shows in the list pane as well as the thread.
     reveal: search.reveal === true || search.reveal === "true" ? true : undefined,
+    // Turns the list's campaign filter on, replied tickets only — the campaign page's
+    // "View replies" link.
+    campaignId: typeof search.campaignId === "string" ? search.campaignId : undefined,
   }),
   // Bookmarks and notification links to an old tab name land on a URL the sidebar can match.
   beforeLoad: ({ location, search }) => {
@@ -50,6 +53,7 @@ interface InboxSearch {
   contactId?: string;
   history?: boolean;
   reveal?: boolean;
+  campaignId?: string;
 }
 
 /**
@@ -70,7 +74,16 @@ function WhatsAppInbox() {
   const contactId = searchParams.contactId;
   const history = searchParams.history;
   const reveal = searchParams.reveal;
+  const campaignId = searchParams.campaignId;
   const navigate = useNavigate();
+
+  useEffect(() => {
+    if (!campaignId) return;
+    const { filter, setFilter } = useChatFilterStore.getState();
+    setFilter({ ...filter, searchTerm: "", campaigns: [campaignId], campaignReplied: true });
+    // Consumed like `contactId`, so clearing the filter is not undone by a refresh.
+    navigate({ to: "/dashboard/inbox", search: { tab: tab ?? "all" } as never, replace: true });
+  }, [campaignId, tab, navigate]);
   const requestHistoryFor = useConversationHistoryRequest((state) => state.requestFor);
 
   const { selectedContact, setSelectedContact, contactsById } = useContactsStore();

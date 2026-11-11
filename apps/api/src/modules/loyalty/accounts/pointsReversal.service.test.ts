@@ -62,7 +62,7 @@ beforeEach(() => {
   });
   db.loyaltyTransaction.create.mockResolvedValue({ id: "txn-reversal" });
   db.customerLoyaltyAccount.findUnique.mockResolvedValue({
-    contact: { name: "Ann", phone: "919000000001" },
+    contact: { name: "Ann", identities: [{ kind: "PHONE", value: "919000000001" }] },
   });
   (checkAndUpgradeTier as Mock).mockResolvedValue({ direction: "down", currentTier: null });
 });

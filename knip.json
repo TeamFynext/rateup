@@ -1,0 +1,43 @@
+{
+  "$schema": "https://unpkg.com/knip@6/schema.json",
+  "ignoreExportsUsedInFile": true,
+  "workspaces": {
+    ".": {
+      "entry": [".vite-hooks/*"]
+    },
+    "apps/api": {
+      "entry": ["scripts/*.ts", "src/emails/**/*.tsx"],
+      "project": ["src/**/*.ts", "src/**/*.tsx", "scripts/**/*.ts"],
+      "ignoreDependencies": ["@prisma/client", "@rateup/db", "pino-pretty"]
+    },
+    "apps/worker-bullmq": {},
+    "apps/worker-kafka": {
+      "ignoreDependencies": ["bullmq"]
+    },
+    "apps/web": {
+      "entry": ["src/routes/**/*.{ts,tsx}", "i18next.config.ts", "instrument.server.mjs"],
+      "ignoreDependencies": ["html2canvas-pro"]
+    },
+    "apps/admin": {
+      "entry": ["src/routes/**/*.{ts,tsx}"]
+    },
+    "apps/docs": {
+      "entry": ["src/routes/**/*.{ts,tsx}", "src/content/**/*.mdx"],
+      "ignore": [".source/**"]
+    },
+    "apps/mobile": {
+      "metro": false,
+      "entry": [
+        "src/app/**/*.{ts,tsx}",
+        "plugins/*.js",
+        "scripts/*.{js,mjs}",
+        "modules/*/index.ts",
+        "metro.config.js"
+      ],
+      "ignore": [".agents/**"],
+      "ignoreDependencies": ["buffer", "react-native-css-interop"]
+    },
+    "packages/*": {},
+    "tools/*": {}
+  }
+}

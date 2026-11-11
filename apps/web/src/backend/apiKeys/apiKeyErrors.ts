@@ -1,4 +1,5 @@
 import { getAccessDenialReason, getApiErrorMessage } from "@/utils/apiError.ts";
+import type { Translate } from "@/utils/translate";
 
 /**
  * Why the API refused to put permissions on a key (rateup-api `src/authz/grant.ts`), or null
@@ -17,8 +18,6 @@ export function getApiKeyGrantDenial(error: unknown): ApiKeyGrantDenial | null {
     return { reason: "permission", detail: getApiErrorMessage(error, "") };
   return null;
 }
-
-type Translate = (key: string, values?: Record<string, unknown>) => string;
 
 /** The message for a grant refusal, or null when `error` is not one. */
 export function apiKeyGrantDenialMessage(error: unknown, t: Translate): string | null {

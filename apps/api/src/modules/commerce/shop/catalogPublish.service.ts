@@ -1,7 +1,7 @@
 import { log } from "../../../utils/logger.js";
 import prisma from "../../../utils/prisma.js";
-import { sendProducts } from "../../whatsapp/catalog/products/product.service.js";
-import { CatalogProductTypes } from "../../whatsapp/catalog/products/product.schema.js";
+import { sendProducts } from "../catalogs/products/product.service.js";
+import { CatalogProductTypes } from "../catalogs/products/product.schema.js";
 import { toNumber } from "./pricing.js";
 import { storefrontProductUrl } from "./storefrontLinks.js";
 

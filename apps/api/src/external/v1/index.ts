@@ -9,7 +9,7 @@ import { externalCampaignRoutes } from "./campaigns/campaign.external.route.js";
 import { externalWaTemplateRoutes } from "./wa-templates/wa_templates.external.route.js";
 // Loyalty's wire shapes are the same on both versions, so v1 mounts v2's module.
 import { externalLoyaltyRoutes } from "../v2/loyalty/loyalty.route.js";
-import { assertApiAccessToken } from "../../modules/apiAccessToken/apiAccessToken.auth.js";
+import { assertApiAccessToken } from "../../modules/settings/apiKeys/apiKey.auth.js";
 import { Role } from "../../generated/prisma/client.js";
 import { ExternalApiError } from "../shared/errors.js";
 import { registerPartnerHooks } from "../shared/partnerHooks.js";

@@ -1,9 +1,8 @@
 import type { CreateRule, Rule } from "@/types/rule.ts";
 
-import { WHATSAPP_URL } from "..";
 import { axiosClient } from "../../apiClient";
 
-const base = `${WHATSAPP_URL}/automated-reply/rule`;
+const base = "/automation/rules";
 
 export async function createRule(data: CreateRule) {
   const res = await axiosClient.post(base, data);

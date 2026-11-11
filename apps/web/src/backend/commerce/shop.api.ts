@@ -2,7 +2,7 @@ import { axiosClient } from "@/backend/apiClient";
 
 /**
  * The shop: products, orders, coupons, payments and the public storefront/checkout. Mirrors
- * `rateup-api/src/modules/commerce/shop/` (routes under `/shop` and `/public/shop`).
+ * `apps/api/src/modules/commerce/shop/` (routes under `/shop` and `/public/shop`).
  *
  * Money from the authenticated endpoints is Prisma `Decimal`, which arrives as a string
  * ("24.00"); `Money` says so and `toMoney` reads it. The public endpoints send numbers.

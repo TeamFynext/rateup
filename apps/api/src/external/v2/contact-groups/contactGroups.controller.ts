@@ -1,14 +1,14 @@
 import type { FastifyReply, FastifyRequest } from "fastify";
 
 import { Prisma } from "../../../generated/prisma/client.js";
-import { createMultipleContacts } from "../../../modules/contact/contact.service.js";
+import { createMultipleContacts } from "../../../modules/contacts/contact.service.js";
 import {
   addExistingContactsToGroup,
   ContactGroupNotFoundError,
   createContactGroup,
   removeContactsFromGroup,
-} from "../../../modules/contact/contactGroup/contactGroup.service.js";
-import { ContactGroupType } from "../../../modules/contact/contactGroup/contactGroup.schema.js";
+} from "../../../modules/contacts/audiences/audience.service.js";
+import { ContactGroupType } from "../../../modules/contacts/audiences/audience.schema.js";
 import { presentContact } from "../contacts/presenters.js";
 import { ExternalApiError } from "../../shared/errors.js";
 import { decodeCursor, toPage, type PaginationQuery } from "../pagination.js";
@@ -211,7 +211,11 @@ export async function importGroupContactsHandler(
       }),
       orgId,
     );
-    for (const row of rows) if (row.phone) created.set(row.phone, row.id);
+    const phoneById = await svc.primaryPhones(rows.map((row) => row.id));
+    for (const row of rows) {
+      const phone = phoneById.get(row.id);
+      if (phone) created.set(phone, row.id);
+    }
   }
 
   // A row the create skipped either lost a race to a concurrent create of the same phone

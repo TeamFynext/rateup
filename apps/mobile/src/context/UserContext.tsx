@@ -119,15 +119,18 @@ const applyMessageStatusUpdate = (
  * row, which replaces every cached copy (one per thread key the contact owns) and
  * the inbox row's last-message snippet when it is that message.
  */
-const applyMessageEdited = (update: orgWsMessage["message_edited"]) => {
-  const row = update?.message;
-  if (!update?.messageId || !row?.messageBody) return;
-  const { contactId, messageId } = update;
-  const patch = { messageBody: row.messageBody, editedAt: update.editedAt ?? row.editedAt };
-
+/**
+ * Merges `patch` into every cached copy of a message (one per thread key the contact
+ * owns), in memory and on disk, so the change survives reopening the thread.
+ */
+const patchMessageEverywhere = (
+  contactId: string | null | undefined,
+  messageId: string,
+  patch: Record<string, unknown>,
+) => {
   const store = useMessagesStore.getState();
   const m = new Map(store.messagesByKey);
-  const changed: { key: string; message: typeof row }[] = [];
+  const changed: { key: string; message: any }[] = [];
   for (const [key, entry] of m) {
     if (contactId && !key.startsWith(`${contactId}_`)) continue;
     const idx = entry.messages.findIndex((msg) => (msg.messageId ?? msg.id) === messageId);
@@ -142,6 +145,34 @@ const applyMessageEdited = (update: orgWsMessage["message_edited"]) => {
     useMessagesStore.setState({ messagesByKey: m });
     changed.forEach(({ key, message }) => saveMessagesToIDB(key, [message]));
   }
+};
+
+/**
+ * The customer deleted a message: every cached copy is flagged, which turns it into the
+ * "This message was deleted" placeholder, and the inbox row stops quoting it. The row's
+ * snippet carries no message id, so it is matched by the message's timestamp, as on the web.
+ */
+const applyMessageDeleted = (update: orgWsMessage["message_deleted"]) => {
+  if (!update?.messageId || !update.deletedAt) return;
+  patchMessageEverywhere(update.contactId, update.messageId, { deletedAt: update.deletedAt });
+
+  const rowKey = update.conversationId ?? update.contactId;
+  if (!rowKey || !update.waCreatedAt) return;
+  useContactsStore
+    .getState()
+    .updateContactById(rowKey, (c) =>
+      c?.lastMessage?.waCreatedAt === update.waCreatedAt
+        ? { ...c, lastMessage: { ...c.lastMessage, deletedAt: update.deletedAt } }
+        : c,
+    );
+};
+
+const applyMessageEdited = (update: orgWsMessage["message_edited"]) => {
+  const row = update?.message;
+  if (!update?.messageId || !row?.messageBody) return;
+  const { contactId, messageId } = update;
+  const patch = { messageBody: row.messageBody, editedAt: update.editedAt ?? row.editedAt };
+  patchMessageEverywhere(contactId, messageId, patch);
 
   if (!contactId) return;
   const rowKey = rowKeyQuotingMessage(contactId, messageId);
@@ -357,6 +388,9 @@ const UserProvider = ({ children }: { children: ReactNode }) => {
         }
         if (message?.type === "message_edited") {
           applyMessageEdited(message.message_edited);
+        }
+        if (message?.type === "message_deleted") {
+          applyMessageDeleted(message.message_deleted);
         }
         if (message?.type === "inbox_note") {
           applyInboxNote(message.inbox_note);

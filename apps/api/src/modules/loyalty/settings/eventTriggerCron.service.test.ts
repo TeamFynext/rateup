@@ -127,7 +127,12 @@ function account(over: Record<string, unknown> = {}) {
     id: "acct-1",
     currentPoints: 500,
     lastActivityAt: new Date(2026, 0, 1),
-    contact: { id: "contact-1", phone: "919000000001", name: "Ann", orgId: ORG },
+    contact: {
+      id: "contact-1",
+      identities: [{ kind: "PHONE", value: "919000000001" }],
+      name: "Ann",
+      orgId: ORG,
+    },
     program: { id: PROGRAM },
     ...over,
   };
@@ -230,7 +235,9 @@ describe("checkBirthdayEventTriggers", () => {
     db.loyaltyEventTrigger.findMany.mockResolvedValue([trigger()]);
     db.$queryRaw.mockResolvedValue([{ id: "acct-1" }]);
     db.customerLoyaltyAccount.findMany.mockResolvedValue([
-      account({ contact: { phone: null, name: "Ann", orgId: ORG, dob: localDate(1990, 4, 15) } }),
+      account({
+        contact: { identities: [], name: "Ann", orgId: ORG, dob: localDate(1990, 4, 15) },
+      }),
     ]);
 
     await checkBirthdayEventTriggers();

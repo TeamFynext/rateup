@@ -1,9 +1,9 @@
-import { collectDefaultMetrics, Counter, Histogram, register } from "prom-client";
+import { collectDefaultMetrics, Counter, Histogram, register } from "@prometheus-io/client";
 
 /**
  * Prometheus metrics shared by every service.
  *
- * Everything registers on prom-client's default registry, so whichever server
+ * Everything registers on the Prometheus client's default registry, so whichever server
  * exposes `/metrics` in a process (the worker health server, or the API's
  * `/api/health/metrics`) serves all of it. Metrics defined here are cheap to
  * import from anywhere — a counter that is never scraped costs a few bytes.
@@ -13,7 +13,7 @@ export const metricsRegistry = register;
 let defaultMetricsStarted = false;
 
 /**
- * Starts prom-client's process metrics (CPU, memory, event-loop lag, GC) and
+ * Starts the Prometheus client's process metrics (CPU, memory, event-loop lag, GC) and
  * stamps every series with the service name, so the three Railway services can
  * share one dashboard. Idempotent.
  */

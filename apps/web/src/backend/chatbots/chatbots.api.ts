@@ -4,8 +4,8 @@ import type { AutomationPlatform } from "@/types/platform.ts";
 
 import { axiosClient } from "../apiClient";
 
-/** `/api/chatbots`: chatbots on every channel through one API. */
-const base = "/chatbots";
+/** `/api/automation/journeys`: chatbots on every channel through one API. */
+const base = "/automation/journeys";
 
 /** How the API names a channel; the UI keeps the lowercase AutomationPlatform values. */
 export type ChatbotApiPlatform = "WHATSAPP" | "INSTAGRAM" | "FACEBOOK";

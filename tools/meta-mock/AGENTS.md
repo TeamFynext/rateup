@@ -57,6 +57,6 @@ Cloud API error codes and wording).
 - **Account ids must match the app under test.** Callbacks carry `phone_number_id`, and the app
   resolves the tenant from it; wrong ids mean the app silently ignores the delivery.
 - **Webhooks are signed** with `X-Hub-Signature-256` using `META_MOCK_APP_SECRET`, which must
-  equal rateup-api's `waclient_secret` or every delivery is refused with 401.
+  equal rateup-api's `META_APP_SECRET` or every delivery is refused with 401.
 - **Never replay webhooks at an app pointed at the real Graph host.** An inbound message can
   trigger an automated reply that reaches a real phone.
