@@ -61,6 +61,10 @@ export interface StorefrontHead {
 
 const INDEX = "index, follow, max-image-preview:large";
 
+/** For a shop that wrote no description, so its preview never falls back to RateUp's own. */
+const fallbackDescription = (storeName: string) =>
+  `Shop ${storeName} online. Browse products and order on WhatsApp.`;
+
 const absoluteImage = (url: string | null | undefined) =>
   url && /^https?:\/\//.test(url) ? url : undefined;
 
@@ -94,14 +98,13 @@ function socialTags(input: {
     { property: "og:url", content: input.url },
     { name: "twitter:card", content: input.image ? "summary_large_image" : "summary" },
     { name: "twitter:title", content: input.title },
+    { name: "twitter:url", content: input.url },
+    // Always set, even when the shop wrote none: the root route's RateUp description would
+    // otherwise survive the merge and show as the shop's link preview in WhatsApp.
+    { name: "description", content: input.description },
+    { property: "og:description", content: input.description },
+    { name: "twitter:description", content: input.description },
   ];
-  if (input.description) {
-    tags.push(
-      { name: "description", content: input.description },
-      { property: "og:description", content: input.description },
-      { name: "twitter:description", content: input.description },
-    );
-  }
   if (input.image) {
     tags.push(
       { property: "og:image", content: input.image },
@@ -120,7 +123,8 @@ export function storeHead(storefront: Storefront, baseUrl: string): StorefrontHe
     absoluteImage(banner?.imageUrl) ??
     absoluteImage(store.logoUrl) ??
     absoluteImage(products.find((p) => p.images[0])?.images[0]);
-  const description = summarise(banner?.subtitle || store.description);
+  const description =
+    summarise(banner?.subtitle || store.description) || fallbackDescription(store.name);
 
   const jsonLd: JsonLd = {
     "@context": "https://schema.org",
@@ -161,7 +165,10 @@ export function productHead(
     (i) => absoluteImage(i) ?? [],
   );
   const image = images[0];
-  const description = summarise(product.description) || summarise(store.description);
+  const description =
+    summarise(product.description) ||
+    summarise(store.description) ||
+    fallbackDescription(store.name);
   const prices = product.variants.map((v) => v.price);
   const lowest = Math.min(...prices);
   const soldOut = product.variants.every((v) => v.soldOut);
