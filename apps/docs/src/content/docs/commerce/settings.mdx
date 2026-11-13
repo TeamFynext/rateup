@@ -8,7 +8,8 @@ import ScreenShot from "@/components/Screenshot";
 
 **Commerce → Settings** covers *"How you get paid and deliver, what checkout asks, and your store's
 details."* Each tab keeps its edits while you look at another; click **Save changes** in the bar at
-the bottom of a tab to keep them, or **Discard**.
+the bottom of a tab to keep them, or **Discard**. **Customer messages** has no bar: each change there
+saves on its own.
 
 <ScreenShot src="/docs/screenshots/commerce/settings-store.png" alt="Commerce → Settings on the Store tab: the tab row Getting paid · Delivery · Checkout · Store · Customer messages, the Meta catalog card with a catalog marked 'Used by your shop', the Store card (Store name, Short description, Logo, Default low-stock alert), Currency and tax, and the Storefront card with its Preview button and Live badge" />
 
@@ -109,33 +110,112 @@ for you. *"Products you add or change are published to this catalog automaticall
 
 ## Choose What Customers Hear
 
-**Customer messages** — *"What customers hear about their order. Inside WhatsApp's 24-hour window we
-send a plain message; outside it, only an approved template can reach them."*
+**Customer messages** lists every message the shop sends on its own, in two cards: **Order
+updates** and **Reminders**. WhatsApp only lets a business send free-form messages to a customer
+who has written in the last 24 hours, so each message has two parts:
 
-Each row has a switch and, when on, a template picker: **Only inside the 24-hour window** (the
-default) or one of your approved [WhatsApp templates](/whatsapp/templates).
+| Part of the card | Goes to | What is sent |
+|------------------|---------|--------------|
+| **Customer wrote in the last 24 hours** | Customers in an open WhatsApp chat, and every Instagram and Messenger customer | Your words, as a chat message |
+| **No message from them in 24 hours** | Everyone else on WhatsApp | The approved template you pick — or nothing, with **None: open chats only** |
+
+The badge by the message's name sums it up: **Reaches every customer** (an approved template is
+picked), **Open chats only**, or **Off**.
+
+<ScreenShot src="/docs/screenshots/commerce/settings-messages.png" alt="Commerce → Settings → Customer messages: the Order updates card with Cash order placed — its chat message under 'Customer wrote in the last 24 hours', and under 'No message from them in 24 hours' a picked template with its Approved badge and text — and Confirm a cash order on Open chats only" />
+
+### Write a Message in Your Own Words
+
+<Steps>
+<Step>
+On the message's card, click **Edit message**. The box opens on the words customers get now — the
+default until you change it.
+</Step>
+<Step>
+Write the message. The buttons above the box add emoji, WhatsApp's bold, italic, strikethrough and
+monospace, and the message's variables: hover a variable such as `{{2}}` to see what it stands for,
+and click it to insert it. The line under the message lists them, for example `{{1}}` Customer's
+first name · `{{2}}` Order number · `{{3}}` Order total · `{{4}}` Items ordered · `{{5}}` Delivery
+address.
+</Step>
+<Step>
+Click **Save**. The words are used straight away. Nothing is sent to Meta.
+</Step>
+</Steps>
+
+To go back to RateUp's wording, click **Edit message**, then **Use the default words**.
+
+| Writing rule | Why |
+|--------------|-----|
+| Use only the message's own variables | A message with five variables refuses `{{6}}` — *"This message has 5 variables; remove the extra one."* |
+| Stay under 1,024 characters | WhatsApp's limit. The counter under the box turns red past it |
+| Words inside `[[ ]]` are optional | They are left out when the value inside is empty: the Shipped default `Your order {{2}} is on its way.[[ Carrier: {{5}}.]]` drops the carrier sentence when there is no carrier |
+| The total already has its currency | Write `{{3}}`, not `₹{{3}}`, or customers see the symbol twice |
+
+The **Confirm order** / **Cancel** buttons on **Confirm a cash order**, the rating buttons on **Ask
+for a review** and **Buy now** on **Back in stock** are added for you.
+
+### Reach Customers Who Haven't Written in 24 Hours
+
+Under **No message from them in 24 hours**, pick one of your approved
+[WhatsApp templates](/whatsapp/templates). The card then shows that template's text — what these
+customers will read — and what fills its variables: *"Filled with `{{1}}` Customer's first name ·
+`{{2}}` Order number …"*. A template's `{{1}}`, `{{2}}` … get the message's variables in the order
+the card lists them, so write your template with that order in mind.
+
+| You want | Do |
+|----------|----|
+| A template that already exists | Pick it in the list |
+| A template with the same words as your message | Click **Make a template from my words**. RateUp sends it to Meta — *"Sent to Meta for approval"* — and picks it once made. Until Meta approves it, these customers get nothing |
+| To reach only customers in an open chat | Pick **None: open chats only** |
+
+<Callout type="warn">
+  A template for **Confirm a cash order** needs quick-reply buttons named **Confirm order** and
+  **Cancel**, and one for **Ask for a review** buttons named **Loved it**, **It was okay** and **Not
+  happy** — taps on a button with other words do nothing. The card warns when a picked template's
+  buttons don't match. **Make a template from my words** adds the right buttons for you.
+</Callout>
+
+A template made from your words keeps the words it was made with. When you edit the message later,
+the card says *"This template still has your old words."* — click **Update the template** to send
+the new words to Meta.
+
+**Make a template from my words** needs a connected WhatsApp number, and Meta refuses a template
+that starts or ends with a variable or runs past 1,024 characters once a link line is added. Your
+words are kept either way, and the card says why the template wasn't made.
+
+<Callout type="info">
+  Meta charges for every template it delivers. Messages in an open chat are free.
+</Callout>
+
+### Turn Messages On or Off
+
+Each card's switch saves straight away.
 
 | Message | On by default |
 |---------|---------------|
-| **Order placed**, **Payment received**, **Confirm a cash order** | Yes |
+| **Cash order placed**, **Confirm a cash order**, **Bank transfer details** | Yes |
+| **Payment received**, **Cash order confirmed** | Yes |
 | **Packed** | No |
-| **Shipped, with tracking**, **Out for delivery**, **Delivered**, **Delivery failed** | Yes |
+| **Shipped**, **Out for delivery**, **Delivered**, **Delivery failed** | Yes |
 | **Cancelled**, **Refunded** | Yes |
 | **Payment reminder**, **Cart reminder**, **Back in stock** | Yes |
-| **Ask for a review** | Yes — sent after delivery |
+| **Ask for a review** | Yes — two days after delivery |
+
+**Confirm a cash order** and **Bank transfer details** follow **Cash order placed**'s switch until
+you change them, and **Cash order confirmed** follows **Payment received**'s.
 
 <Callout type="info">
-  The switches stop the order updates and **Ask for a review**. In the current build **Payment
-  reminder**, **Cart reminder** and **Back in stock** go out whatever their switch says — their rows
-  here only choose the template. The cash-order confirmation buttons arrive with **Order placed**, so
-the **Confirm a cash order** row has no effect of its own. To stop cart reminders, pick no times on
+  In the current build **Payment reminder**, **Cart reminder** and **Back in stock** go out whatever
+  their switch says. To stop cart reminders, pick no times on
   [Checkout](/commerce/checkout-settings#remind-customers-who-did-not-pay).
 </Callout>
 
 <Callout type="warn">
-  Keep **Order placed** on if you ask cash customers to confirm. Turning it off also stops the
-  **Confirm order** / **Cancel** message, and with **Ask the customer to confirm** on, those orders
-  are then cancelled when **Hours to confirm** runs out.
+  Keep **Confirm a cash order** on if you ask cash customers to confirm. With it off — or with no
+  template for customers outside the 24-hour window — they get no **Confirm order** / **Cancel**
+  message, and with **Ask the customer to confirm** on, those orders are cancelled when **Hours to
+  confirm** runs out.
 </Callout>
 
 A storefront order whose number has not been confirmed on WhatsApp gets no messages until it is
@@ -150,7 +230,9 @@ paid; its timeline notes *"the number isn't confirmed yet"*. See
 |---------|-------|-----|
 | *"Could not load your shop settings"* | The shop could not be loaded | Reload the page |
 | Fields are greyed out | You lack the permission for that tab | Ask an admin — see [Who Can Do What](/commerce#who-can-do-what) |
-| A message never arrives outside 24 hours | The row uses **Only inside the 24-hour window** | Pick an approved template |
+| A message never arrives outside 24 hours | The card shows **Open chats only**, or its template is awaiting Meta or rejected | Pick an approved template, or click **Make a template from my words** and wait for approval |
+| *"Saved. The WhatsApp template wasn't made."* | The card's note gives the reason | Connect a WhatsApp number, or move a variable away from the start or end |
+| Customers can't confirm a cash order from the template | The picked template's buttons aren't named **Confirm order** / **Cancel** | Rename its buttons, or use **Make a template from my words** |
 | No **Legacy catalog** tab | Your account never used the older catalog tools | Nothing to do |
 
 ---

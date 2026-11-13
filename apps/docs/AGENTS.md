@@ -412,10 +412,16 @@ changes.
 - **Commerce → Settings → Checkout persists** (**Save changes**) since the rebuild; the old
   **Abandoned cart recovery** card is gone.
 - **Commerce → Settings → Customer messages switches do not all work.** The API
-  (`recovery.service.ts`) never reads `.enabled` for Payment reminder, Cart reminder or Back in stock
-  — those rows only pick the template. **Confirm a cash order** has no effect: Confirm/Cancel ride on
-  **Order placed**, so turning Order placed off while confirmation is required gets cash orders
-  auto-cancelled. Documented as-is with a warn callout; re-check when fixed.
+  (`recovery.service.ts`) never reads `.enabled` for Payment reminder, Cart reminder or Back in stock;
+  documented with an info callout, re-check when fixed. Since 2026-11-12 (announcement
+  `2026-11-12-commerce-custom-messages`) each message has its own words and its own Meta template
+  (`messageCatalog.ts`, `shopMessages.service.ts`), and **Confirm a cash order** has its own switch.
+  It, **Bank transfer details** and **Cash order confirmed** inherit the old event's switch until
+  saved (`inheritsFrom`), never its template. **Save** only stores the words (open chats);
+  a template for customers outside the 24-hour window is picked per card or made with **Make a
+  template from my words** (`makeTemplate`). Turning Confirm a cash order off while confirmation is
+  required gets cash orders auto-cancelled — warn callout. `commerce/settings-messages.png` was
+  captured and uploaded to the CDN on 2026-11-13 (not `local`).
 - **Messaging cost vs revenue** gives each campaign a row, but all automations and flows share one
   **Automations and flows** row (the announcement says per automation).
 - **Store checkout (Shopify/WooCommerce)** is offered only when products were imported with

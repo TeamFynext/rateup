@@ -11,6 +11,8 @@ import {
 } from "../../../workers/bullmq/queues/shop.queue.js";
 import { chatAttribution } from "./attribution.js";
 import { checkoutUrl, storefrontUrl } from "./events.js";
+import { paramsFor, renderShopBody } from "./messageCatalog.js";
+import { formatMoney } from "./money.js";
 import { notificationSetting, sendShopMessage } from "./notify.js";
 import { addOrderEvent, cancelOrder } from "./orders.service.js";
 import { refreshPendingPayment } from "./payments/payments.service.js";
@@ -25,6 +27,8 @@ import { inStoreCheckout } from "./checkoutVia.js";
  * confirmation deadline, back-in-stock alerts and the review request after delivery. Every
  * handler re-reads the order and stops if the moment has passed (paid, cancelled, delivered).
  */
+
+const firstName = (name: string | null) => name?.split(" ")[0] ?? "there";
 
 export async function fireShopReminder(orderId: string, kind: ShopReminderKind, step: number) {
   const order = await prisma.shopOrder.findUnique({
@@ -75,23 +79,25 @@ export async function fireShopReminder(orderId: string, kind: ShopReminderKind, 
   if (kind === "review") {
     if (order.fulfillmentStatus !== "DELIVERED") return "skipped";
     const setting = notificationSetting(order.store.notifications, "review_request");
-    const on =
-      (order.store.notifications as Record<string, { enabled?: boolean }> | null)?.review_request
-        ?.enabled ?? true;
-    if (!on) return "disabled";
+    if (!setting.enabled) return "disabled";
     const first = order.items[0];
+    const params = paramsFor("review_request", {
+      name: firstName(order.customerName),
+      orderNumber: `#${order.number}`,
+      productName: first ? first.title : "order",
+    });
     await sendShopMessage(
       recipient,
       {
-        text: `How was your ${first ? first.title : "order"}? Tap to tell us — it takes a second.`,
+        text: renderShopBody(setting.body, params),
         buttons: [
           { id: `shop_review:${order.id}:5`, title: "Loved it" },
           { id: `shop_review:${order.id}:3`, title: "It was okay" },
           { id: `shop_review:${order.id}:1`, title: "Not happy" },
         ],
-        templateParams: [order.customerName?.split(" ")[0] ?? "there", `#${order.number}`],
+        templateParams: params,
       },
-      setting.waTemplateId,
+      setting.template,
     );
     await addOrderEvent(order.id, "review_request", "Review request sent");
     return "sent";
@@ -114,14 +120,20 @@ export async function fireShopReminder(orderId: string, kind: ShopReminderKind, 
     const link = order.payments[0];
     if (!link || link.status !== "PENDING" || !link.linkUrl) return "skipped";
     const setting = notificationSetting(order.store.notifications, "payment_reminder");
+    const params = paramsFor("payment_reminder", {
+      name: firstName(order.customerName),
+      orderNumber: `#${order.number}`,
+      total: formatMoney(toNumber(order.total), order.currency),
+      payLink: link.linkUrl,
+    });
     const outcome = await sendShopMessage(
       recipient,
       {
-        text: `Your order #${order.number} (${order.currency} ${toNumber(order.total).toFixed(2)}) is waiting for payment. The link is still open.`,
+        text: renderShopBody(setting.body, params),
         cta: { label: "Pay now", url: link.linkUrl },
-        templateParams: [order.customerName?.split(" ")[0] ?? "there", `#${order.number}`],
+        templateParams: params,
       },
-      setting.waTemplateId,
+      setting.template,
     );
     await recordReminder(order.id, "payment", outcome.sent);
     return outcome.sent ? "sent" : "not_sent";
@@ -137,18 +149,21 @@ export async function fireShopReminder(orderId: string, kind: ShopReminderKind, 
         })
       : null;
   const setting = notificationSetting(order.store.notifications, "cart_reminder");
+  const params = paramsFor("cart_reminder", {
+    name: firstName(order.customerName),
+    storeName: order.store.name,
+    itemCount: `${items} item${items === 1 ? "" : "s"}`,
+    discountCode: discount?.active ? discount.code : "",
+    checkoutLink: checkoutUrl(order.checkoutToken),
+  });
   const outcome = await sendShopMessage(
     recipient,
     {
-      text:
-        `You left ${items} item${items === 1 ? "" : "s"} in your cart at ${order.store.name}.` +
-        (discount?.active
-          ? ` Use code ${discount.code} at checkout for a little extra off.`
-          : " They're still saved for you."),
+      text: renderShopBody(setting.body, params),
       cta: { label: "Finish checkout", url: checkoutUrl(order.checkoutToken) },
-      templateParams: [order.customerName?.split(" ")[0] ?? "there", order.store.name],
+      templateParams: params,
     },
-    setting.waTemplateId,
+    setting.template,
   );
   await recordReminder(order.id, `cart ${step + 1}`, outcome.sent);
   return outcome.sent ? "sent" : "not_sent";
@@ -233,14 +248,15 @@ export async function runBackInStock(variantId: string) {
     });
     if (!count) continue;
     const name = product.title + (variant.title !== "Default" ? ` (${variant.title})` : "");
+    const params = paramsFor("back_in_stock", { productName: name, storeName: store.name });
     const outcome = await sendShopMessage(
       { orgId: store.orgId, channel: r.channel, contactId: r.contactId },
       {
-        text: `Good news — ${name} is back in stock at ${store.name}.`,
+        text: renderShopBody(setting.body, params),
         buttons: [{ id: `shop_buy:${variant.id}:1:bis`, title: "Buy now" }],
-        templateParams: [name, store.name],
+        templateParams: params,
       },
-      setting.waTemplateId,
+      setting.template,
     );
     if (outcome.sent) sent++;
   }

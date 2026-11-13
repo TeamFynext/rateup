@@ -7,8 +7,9 @@ import {
   type PDFPage,
 } from "pdf-lib";
 
+import { addressLines } from "./address.js";
 import { toNumber } from "./pricing.js";
-import type { ShopAddress, ShopSelectedShipping } from "./shop.types.js";
+import type { ShopSelectedShipping } from "./shop.types.js";
 
 export function formatInvoiceNumber(prefix: string, seq: number) {
   return `${prefix}${String(seq).padStart(4, "0")}`;
@@ -75,12 +76,7 @@ const PAYMENT_STATUS: Record<string, string> = {
 export const paymentMethodLabel = (method: string | null) =>
   method ? (PAYMENT_METHODS[method] ?? method.replace(/[_-]+/g, " ")) : "—";
 
-export function addressLines(raw: unknown): string[] {
-  const a = (raw ?? {}) as ShopAddress;
-  const regionLine = [a.region, a.postalCode].filter(Boolean).join(" ");
-  const cityLine = [a.city, regionLine].filter(Boolean).join(", ");
-  return [a.line1, a.line2, cityLine, a.country].filter((l): l is string => !!l && !!l.trim());
-}
+export { addressLines } from "./address.js";
 
 const money = (currency: string, n: unknown) =>
   `${currency} ${toNumber(n as number).toLocaleString("en-US", {

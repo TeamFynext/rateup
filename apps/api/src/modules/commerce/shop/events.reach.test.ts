@@ -2,7 +2,7 @@ import { beforeEach, describe, expect, test, vi } from "vite-plus/test";
 
 const db = vi.hoisted(() => ({ shopOrderEvent: { create: vi.fn() } }));
 const notify = vi.hoisted(() => ({
-  notificationSetting: vi.fn(() => ({ enabled: true, waTemplateId: "t1" })),
+  notificationSetting: vi.fn(() => ({ enabled: true, waTemplateId: "t1", body: "Order {{2}}" })),
   sendShopMessage: vi.fn(async () => ({ sent: true, channel: "WHATSAPP" })),
 }));
 
@@ -32,6 +32,7 @@ const order = (over: Record<string, unknown>) =>
     paymentStatus: "COD_PENDING",
     paymentMethod: "cod",
     shipments: [],
+    items: [],
     store: { notifications: null, codConfirm: true, codPrepaidDiscountPct: null },
     ...over,
   }) as never;

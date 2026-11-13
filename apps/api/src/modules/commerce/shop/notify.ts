@@ -4,6 +4,7 @@ import { log } from "../../../utils/logger.js";
 import prisma from "../../../utils/prisma.js";
 import { contactFields, primaryIdentities } from "../../contacts/identity/contactFields.js";
 import { findOpenSession } from "../../loyalty/messaging/channels/whatsapp/session.js";
+import { templateBodyText } from "../../loyalty/messaging/render.js";
 import { parsePhoneforWa } from "../../loyalty/util.js";
 import { sendTemplateToUserCore } from "../../meta/whatsapp/templates/templates.controller.js";
 import { sendMetaMessage } from "../../meta/shared/metaMessage.service.js";
@@ -14,6 +15,7 @@ import {
   createReplyButtonsMessage,
   createTextMessage,
 } from "../../meta/whatsapp/webhook/whatsapp.utils.js";
+import { SHOP_MESSAGE_CATALOG, templateParamText } from "./messageCatalog.js";
 import type { ShopNotificationEvent, ShopNotificationSettings } from "./shop.types.js";
 
 /**
@@ -152,11 +154,64 @@ function metaDmPayload(recipientId: string, m: ShopMessage): Record<string, unkn
   };
 }
 
+/**
+ * The body parameters a template takes, from the message's catalog-ordered values. Meta
+ * refuses a count that differs from the template's own, and a template approved before the
+ * catalog grew may use fewer than the message now carries.
+ */
+export function templateBodyParams(
+  components: unknown,
+  values: readonly string[],
+  map?: readonly number[] | null,
+): string[] {
+  if (map) return map.map((i) => templateParamText(String(values[i - 1] ?? "")));
+  const body = templateBodyText(components) ?? "";
+  const indexes = [...body.matchAll(/\{\{(\d+)\}\}/g)].map((m) => Number(m[1]));
+  const count = indexes.length ? Math.max(...indexes) : 0;
+  return Array.from({ length: count }, (_, i) => templateParamText(String(values[i] ?? "")));
+}
+
+/**
+ * The template a message falls back on outside the 24-hour window. A bare id is a template
+ * the store picked by hand: it is sent the catalog's values in order. One the shop made from
+ * the store's words also carries how its variables were renumbered.
+ */
+export interface ShopTemplateRef {
+  id: string;
+  /** For each template variable in turn, the catalog variable (1-based) it stands for. */
+  params?: readonly number[] | null;
+}
+
+/** The titles of a template's quick-reply buttons, in the order Meta indexes them. */
+export function templateQuickReplies(components: unknown): string[] {
+  if (!Array.isArray(components)) return [];
+  const buttons = (components as Array<{ type?: string; buttons?: unknown }>).find(
+    (c) => String(c?.type ?? "").toUpperCase() === "BUTTONS",
+  )?.buttons;
+  if (!Array.isArray(buttons)) return [];
+  return (buttons as Array<{ type?: string; text?: string }>)
+    .filter((b) => String(b?.type ?? "").toUpperCase() === "QUICK_REPLY")
+    .map((b) => b.text ?? "");
+}
+
+const sameTitle = (a: string, b: string) => a.trim().toLowerCase() === b.trim().toLowerCase();
+
+/**
+ * What each of a template's quick replies does: the action of the chat button with the same
+ * title, so a template the store made itself works when its buttons say "Confirm order" and
+ * "Cancel". A button with no counterpart sends nothing the shop acts on.
+ */
+function quickReplyPayloads(m: ShopMessage, components: unknown) {
+  const titles = templateQuickReplies(components);
+  if (!titles.length || !m.buttons?.length) return undefined;
+  return titles.map((title) => m.buttons?.find((b) => sameTitle(b.title, title))?.id ?? "");
+}
+
 async function sendWhatsapp(
   r: ShopRecipient,
   phone: string,
   m: ShopMessage,
-  templateId: string | null | undefined,
+  template: ShopTemplateRef | null,
 ): Promise<SendOutcome> {
   const to = parsePhoneforWa(phone);
   const session = await findOpenSession({ orgId: r.orgId, phone: to, phoneId: r.channelAccountId });
@@ -174,21 +229,32 @@ async function sendWhatsapp(
       ? { sent: true, channel: "WHATSAPP", messageId: result.messageId }
       : { sent: false, reason: "failed", detail: result.error };
   }
-  if (!templateId) return { sent: false, reason: "window_closed" };
-  const template = await prisma.waTemplate.findUnique({
+  if (!template) return { sent: false, reason: "window_closed" };
+  const templateId = template.id;
+  const row = await prisma.waTemplate.findUnique({
     where: { id: templateId },
     select: { data: true },
   });
-  const status = (template?.data as { status?: string } | null)?.status;
-  if (status !== WaTemplateStatus.APPROVED)
+  const data = row?.data as { status?: string; components?: unknown } | null;
+  if (data?.status !== WaTemplateStatus.APPROVED)
     return { sent: false, reason: "window_closed", detail: "template not approved" };
   try {
-    const result = await sendTemplateToUserCore(r.orgId, templateId, to, [
-      {
-        type: "body",
-        parameters: (m.templateParams ?? []).map((text) => ({ type: "text", text: String(text) })),
-      },
-    ] as Parameters<typeof sendTemplateToUserCore>[3]);
+    const params = templateBodyParams(data.components, m.templateParams ?? [], template.params);
+    const result = await sendTemplateToUserCore(
+      r.orgId,
+      templateId,
+      to,
+      [{ type: "body", parameters: params.map((text) => ({ type: "text", text })) }] as Parameters<
+        typeof sendTemplateToUserCore
+      >[3],
+      undefined,
+      undefined,
+      undefined,
+      false,
+      undefined,
+      undefined,
+      quickReplyPayloads(m, data.components),
+    );
     const refused =
       result &&
       typeof result === "object" &&
@@ -209,8 +275,9 @@ async function sendWhatsapp(
 export async function sendShopMessage(
   r: ShopRecipient,
   m: ShopMessage,
-  templateId?: string | null,
+  template?: string | ShopTemplateRef | null,
 ): Promise<SendOutcome> {
+  const ref = typeof template === "string" ? { id: template } : (template ?? null);
   try {
     const who = await resolveRecipient(r);
     if (r.channel === "INSTAGRAM" && who.igsId) {
@@ -242,7 +309,7 @@ export async function sendShopMessage(
         : { sent: false, reason: "failed", detail: result.error };
     }
     // WhatsApp orders, and storefront orders from a customer we can reach on WhatsApp.
-    if (who.phone) return await sendWhatsapp(r, who.phone, m, templateId);
+    if (who.phone) return await sendWhatsapp(r, who.phone, m, ref);
     return { sent: false, reason: "no_recipient" };
   } catch (err) {
     log.warn({ err, orgId: r.orgId }, "Shop message failed");
@@ -254,8 +321,32 @@ export async function sendShopMessage(
   }
 }
 
+/**
+ * How the store set one message up. Anything it never saved comes from the catalog: the
+ * default switch and the default words, and for a message that used to ride on another
+ * event's setting (`inheritsFrom`), that event's switch. Never its template: each message
+ * names its own, so what a card shows is what the message sends.
+ */
 export function notificationSetting(settings: unknown, event: ShopNotificationEvent) {
   const all = (settings ?? {}) as ShopNotificationSettings;
+  const definition = SHOP_MESSAGE_CATALOG[event];
   const one = all[event] ?? {};
-  return { enabled: one.enabled ?? true, waTemplateId: one.waTemplateId ?? null };
+  const parent = definition.inheritsFrom ? (all[definition.inheritsFrom] ?? {}) : {};
+  const body = one.body?.trim() ? one.body : null;
+  const waTemplateId = one.waTemplateId ?? null;
+  // The map belongs to the template it was made for; a template picked by hand since then
+  // is sent the catalog's values in order, as before.
+  const own = one.templateMap && one.templateMap.waTemplateId === waTemplateId;
+  const template: ShopTemplateRef | null = waTemplateId
+    ? own
+      ? { id: waTemplateId, params: one.templateMap!.params }
+      : { id: waTemplateId }
+    : null;
+  return {
+    enabled: one.enabled ?? parent.enabled ?? definition.defaultOn,
+    waTemplateId,
+    template,
+    body: body ?? definition.defaultBody,
+    customBody: body !== null,
+  };
 }

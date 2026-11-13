@@ -14,7 +14,12 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import type { TFunction } from "i18next";
 import { useEffect, useId, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { type Country, isSupportedCountry, isValidPhoneNumber } from "react-phone-number-input";
+import {
+  type Country,
+  isSupportedCountry,
+  isValidPhoneNumber,
+  parsePhoneNumber,
+} from "react-phone-number-input";
 
 import {
   formatMoney,
@@ -89,6 +94,16 @@ function visitorCountry(): Country | undefined {
   }
 }
 
+/** The country a complete phone number dials, when there is one. */
+function phoneNumberCountry(phone: string | undefined): Country | undefined {
+  if (!phone || !isValidPhoneNumber(phone)) return undefined;
+  try {
+    return parsePhoneNumber(phone)?.country;
+  } catch {
+    return undefined;
+  }
+}
+
 /** A field the order can't go through without. */
 function Required() {
   const { t } = useTranslation();
@@ -143,6 +158,27 @@ export function CheckoutForm(props: Readonly<Props>) {
             : null;
   const phoneCountry =
     address.country && isSupportedCountry(address.country) ? address.country : localCountry;
+
+  const changeAddress = (next: ShopAddress, immediate: boolean) => {
+    setAddress(next);
+    const patch = { shippingAddress: next, customer: { name: next.name ?? null } };
+    if (immediate) void props.send(patch).catch(() => undefined);
+    else props.queue(patch);
+  };
+  /**
+   * Most shoppers live where their phone number is from, so a complete number picks the
+   * delivery country — only while none is chosen, so a country the shopper picked (or one
+   * already on the order) is never changed under them. Sent at once, like a picked country,
+   * since the delivery options depend on it.
+   */
+  const fillCountryFrom = (value: string | undefined) => {
+    if (!store.askAddress || address.country) return;
+    const country = phoneNumberCountry(value);
+    if (country) changeAddress({ ...address, country }, true);
+  };
+  // A number already on the order, from an earlier visit, fills the country on arrival.
+  // oxlint-disable-next-line react-hooks/exhaustive-deps -- once, on mount
+  useEffect(() => fillCountryFrom(order.customerPhone ?? undefined), []);
 
   const total = formatMoney(order.total, order.currency);
 
@@ -229,8 +265,10 @@ export function CheckoutForm(props: Readonly<Props>) {
                   onChange={(value) => {
                     setPhone(value ?? "");
                     // Saved only once complete: a half-typed number is no use to anyone.
-                    if (value && isValidPhoneNumber(value))
+                    if (value && isValidPhoneNumber(value)) {
                       props.queue({ customer: { phone: value } });
+                      fillCountryFrom(value);
+                    }
                   }}
                   onBlur={() => setPhoneTouched(true)}
                   aria-invalid={phoneInvalid || undefined}
@@ -265,17 +303,7 @@ export function CheckoutForm(props: Readonly<Props>) {
               />
             </Field>
           </CheckoutSection>
-          {store.askAddress && (
-            <AddressSection
-              address={address}
-              onChange={(next, immediate) => {
-                setAddress(next);
-                const patch = { shippingAddress: next, customer: { name: next.name ?? null } };
-                if (immediate) void props.send(patch).catch(() => undefined);
-                else props.queue(patch);
-              }}
-            />
-          )}
+          {store.askAddress && <AddressSection address={address} onChange={changeAddress} />}
           <DeliverySection
             checkout={checkout}
             hasCountry={Boolean(address.country)}

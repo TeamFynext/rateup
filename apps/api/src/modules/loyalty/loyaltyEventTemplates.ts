@@ -47,12 +47,3 @@ export function joinButtonLabel(joinKeyword: string | null | undefined): string 
   const word = joinKeyword?.trim() || "join";
   return (word.charAt(0).toUpperCase() + word.slice(1)).slice(0, QUICK_REPLY_MAX_LENGTH);
 }
-
-/**
- * `loyalty_points_issued` → `loyalty_points_issued_v2`, `_v3`, … An edit Meta will not
- * take in place (the template is mid-review) becomes a new template under the next free
- * suffix, and the base name stays recognisable in the library.
- */
-export function versionedTemplateName(baseName: string, version: number): string {
-  return version <= 1 ? baseName : `${baseName}_v${version}`;
-}

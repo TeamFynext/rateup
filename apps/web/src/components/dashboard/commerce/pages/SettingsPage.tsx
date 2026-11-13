@@ -76,7 +76,7 @@ export function SettingsPage({ tab }: Readonly<{ tab: SettingsTab | undefined }>
             <StoreTab store={store} />
           </TabsContent>
           <TabsContent value="messages" keepMounted className="mt-0">
-            <MessagesTab store={store} />
+            <MessagesTab />
           </TabsContent>
           {hasLegacy && (
             <TabsContent value="legacy" className="mt-0">

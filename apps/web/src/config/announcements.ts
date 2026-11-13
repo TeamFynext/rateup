@@ -40,6 +40,20 @@ export interface Announcement {
 
 export const ANNOUNCEMENTS: readonly Announcement[] = [
   {
+    id: "2026-11-12-commerce-custom-messages",
+    title: "Write your own order update messages",
+    summary:
+      "Edit what customers hear when an order is placed, shipped, delivered and more. Pick a WhatsApp template to also reach customers who haven't written to you in 24 hours.",
+    publishedAt: "2026-11-12",
+    kinds: ["new"],
+    area: "Commerce",
+    link: {
+      to: "/dashboard/commerce/settings",
+      search: { tab: "messages" },
+      label: "Open Messages settings",
+    },
+  },
+  {
     id: "2026-11-09-inbox-campaign-filter",
     title: "Find campaign replies in the inbox",
     summary:

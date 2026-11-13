@@ -4,6 +4,7 @@ import type { Prisma, ShopStore } from "../../../generated/prisma/client.js";
 import prisma from "../../../utils/prisma.js";
 import { assertCheckoutVia } from "./externalCheckout.service.js";
 import { notFound, ShopError } from "./shop.errors.js";
+import type { ShopNotificationSettings } from "./shop.types.js";
 import { storeLogoUrl } from "./storeLogo.js";
 import { getSubscriptionGate } from "../../settings/subscription/subscription.service.js";
 
@@ -97,7 +98,24 @@ export async function updateStore(orgId: string, data: Prisma.ShopStoreUpdateInp
     });
     if (!own) throw new ShopError("INVALID", "That discount doesn't exist");
   }
+  if (data.notifications && typeof data.notifications === "object") {
+    data.notifications = mergeNotifications(store.notifications, data.notifications);
+  }
   return prisma.shopStore.update({ where: { id: store.id }, data });
+}
+
+/**
+ * Applies a notifications update on top of what is saved, per message and per field. A page
+ * that saves only the switches must not wipe the words another page wrote; `body: null`
+ * is how a store goes back to the default words.
+ */
+export function mergeNotifications(saved: unknown, update: unknown): ShopNotificationSettings {
+  const current = (saved ?? {}) as Record<string, Record<string, unknown>>;
+  const merged: Record<string, Record<string, unknown>> = { ...current };
+  for (const [key, value] of Object.entries((update ?? {}) as Record<string, object>)) {
+    merged[key] = { ...current[key], ...value };
+  }
+  return merged as ShopNotificationSettings;
 }
 
 /** Hands out the next order number atomically. */

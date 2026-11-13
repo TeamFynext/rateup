@@ -1,8 +1,12 @@
 import z from "zod";
 
+import { SHOP_MESSAGE_CATALOG, shopBodyProblem } from "./messageCatalog.js";
 import { isCurrencyCode } from "./money.js";
+import type { ShopNotificationEvent } from "./shop.types.js";
 
 const money = z.coerce.number().min(0).max(10_000_000);
+/** WhatsApp's limit on a template's text, in words a store owner reads. */
+const TOO_LONG = "This message is too long for WhatsApp. Keep it under 1,024 characters.";
 const optionalMoney = money.nullable().optional();
 /** Links shoppers and staff click, and images the server may fetch: http(s) only, never javascript: or data:. */
 export const webUrl = () =>
@@ -81,13 +85,34 @@ export const storeUpdateSchema = z
       .regex(/^[A-Za-z0-9/_-]*$/, "Letters, numbers, - / _ only"),
     taxId: z.string().trim().max(40).nullable(),
     businessAddress: z.string().trim().max(400).nullable(),
-    notifications: z.record(
-      z.string(),
-      z.object({ enabled: z.boolean().optional(), waTemplateId: z.string().nullable().optional() }),
-    ),
+    notifications: z
+      .record(
+        z.string(),
+        z.object({
+          enabled: z.boolean().optional(),
+          waTemplateId: z.string().nullable().optional(),
+          body: z.string().trim().max(1024, TOO_LONG).nullable().optional(),
+        }),
+      )
+      .superRefine((all, ctx) => {
+        for (const [key, value] of Object.entries(all)) {
+          if (!value.body || !(key in SHOP_MESSAGE_CATALOG)) continue;
+          const problem = shopBodyProblem(key as ShopNotificationEvent, value.body);
+          if (problem) ctx.addIssue({ code: "custom", path: [key, "body"], message: problem });
+        }
+      }),
   })
   .partial();
 export type StoreUpdateInput = z.infer<typeof storeUpdateSchema>;
+
+/** Settings › Messages: one automatic message's words; null goes back to the default. */
+export const shopMessageParams = z.object({ key: z.string().trim().min(1).max(40) });
+export const shopMessageSaveSchema = z.object({
+  body: z.string().trim().max(1024, TOO_LONG).nullable(),
+  enabled: z.boolean().optional(),
+  /** Also make the message's own WhatsApp template from the words. */
+  makeTemplate: z.boolean().optional(),
+});
 
 export const shippingRateSchema = z.object({
   zone: z.string().trim().min(1).max(40).default("Domestic"),

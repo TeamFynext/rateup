@@ -3,8 +3,6 @@ import {
   LoyaltyEventType,
   LoyaltyTemplateTypes,
   WaAutomatedReplyResponseType,
-  WaTemplateCategory,
-  WaTemplateComponentTypeUpperCase,
 } from "../../../types/enums.js";
 import { log } from "../../../utils/logger.js";
 import prisma from "../../../utils/prisma.js";
@@ -14,6 +12,10 @@ import { LoyaltyRewardType } from "../../../types/loyalty.js";
 import { calculateGiveback, givebackBand } from "../giveback.js";
 import { buildGivebackInput, loadProgramGivebackSources } from "../giveback/giveback.service.js";
 import { joinButtonLabel } from "../loyaltyEventTemplates.js";
+import {
+  buildBodyTemplate,
+  metaStatusToStep as sharedMetaStatusToStep,
+} from "../../meta/whatsapp/templates/textTemplate.service.js";
 import { toRichText } from "../richText.js";
 import { onlyPurchaseRules } from "../earningRules/triggerRules.js";
 import {
@@ -794,27 +796,7 @@ export function buildLoyaltyBodyTemplate(
   body: string,
   buttons: WaTemplateButton[] = [],
 ): WaMetaTemplate {
-  const placeholderCount = countPlaceholders(body);
-  return {
-    name: templateName,
-    language: "en",
-    category: WaTemplateCategory.UTILITY,
-    components: [
-      {
-        type: WaTemplateComponentTypeUpperCase.BODY,
-        text: body,
-        // Meta rejects a body with variables unless it is given a sample for each one.
-        ...(placeholderCount > 0
-          ? {
-              example: {
-                body_text: [Array.from({ length: placeholderCount }, (_, i) => `Sample ${i + 1}`)],
-              },
-            }
-          : {}),
-      },
-      ...(buttons.length > 0 ? [{ type: WaTemplateComponentTypeUpperCase.BUTTONS, buttons }] : []),
-    ],
-  };
+  return buildBodyTemplate(templateName, body, buttons);
 }
 
 /**
@@ -869,15 +851,7 @@ export async function saveTriggerBody(
 }
 
 export function metaStatusToStep(status: unknown): EventTemplateResult["status"] {
-  if (status === "APPROVED") return "approved";
-  if (status === "REJECTED") return "rejected";
-  return "pending";
-}
-
-function countPlaceholders(body: string): number {
-  const matches = body.match(/\{\{(\d+)\}\}/g);
-  if (!matches) return 0;
-  return new Set(matches).size;
+  return sharedMetaStatusToStep(status);
 }
 
 /* ── activate ───────────────────────────────────────────────────────────────── */

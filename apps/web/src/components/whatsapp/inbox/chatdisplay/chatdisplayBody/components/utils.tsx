@@ -260,45 +260,52 @@ export function getReactionMessage({
   selectedContact: ContactWithUpdatedAt;
 }) {
   const exchangeProcess = message?.messageBody?.exchangeProcess;
-  const isInsta =
-    message?.sourcePlatform == MessagePlatform.INSTAGRAM ||
-    message?.sourcePlatform == MessagePlatform.WEBCHAT ||
-    message?.sourcePlatform == MessagePlatform.FACEBOOK;
+  // Instagram, Messenger and webchat store Meta's Messenger-style body; WhatsApp its own.
+  // Decided per message: a thread can hold both, so the reaction's shape must not be
+  // inferred from the message it reacts to.
+  const isMetaShape = (msg: WaGetMessagesBody) =>
+    msg?.sourcePlatform == MessagePlatform.INSTAGRAM ||
+    msg?.sourcePlatform == MessagePlatform.WEBCHAT ||
+    msg?.sourcePlatform == MessagePlatform.FACEBOOK;
   if (!exchangeProcess) return null;
   const wa_id =
-    exchangeProcess === "send" || isInsta
+    exchangeProcess === "send" || isMetaShape(message)
       ? message?.messageId
-      : (message.messageBody.receive as WaReceiveMessageBody)?.messages[0].id;
-  const reactionMsg = allMessages?.find((msg) => {
-    const { messageType } = parseWaMessage(msg);
-    if (messageType === "reaction") {
-      const reactedMessageId =
-        msg.messageBody.exchangeProcess === "receive"
-          ? !isInsta
-            ? (msg.messageBody.receive as WaReceiveMessageBody).messages[0]!.reaction?.message_id
-            : (msg.messageBody.receive as IgReceiveMessageBody)!.reaction!.mid
-          : !isInsta
-            ? (msg.messageBody.send as WaSendMessageBody).reaction?.message_id
-            : (msg.messageBody.send as IgSendMessageBody).payload!.message_id;
-      return wa_id === reactedMessageId;
+      : (message.messageBody.receive as WaReceiveMessageBody)?.messages?.[0]?.id;
+  // No id means nothing can point at this message; without this, an unreadable reaction
+  // (id undefined) "matches" it.
+  if (!wa_id) return null;
+
+  const reactionOf = (msg: WaGetMessagesBody) => {
+    const meta = isMetaShape(msg);
+    if (msg.messageBody.exchangeProcess === "receive") {
+      const wa = (msg.messageBody.receive as WaReceiveMessageBody | undefined)?.messages?.[0]
+        ?.reaction;
+      const ig = (msg.messageBody.receive as IgReceiveMessageBody | undefined)?.reaction;
+      return meta
+        ? { messageId: ig?.mid, emoji: ig?.emoji ?? reactionEmojiMap(ig?.reaction) }
+        : { messageId: wa?.message_id, emoji: wa?.emoji };
     }
-    return false;
+    const wa = (msg.messageBody.send as WaSendMessageBody | undefined)?.reaction;
+    const ig = (msg.messageBody.send as IgSendMessageBody | undefined)?.payload;
+    return meta
+      ? { messageId: ig?.message_id, emoji: ig?.emoji ?? reactionEmojiMap(ig?.reaction) }
+      : { messageId: wa?.message_id, emoji: wa?.emoji };
+  };
+
+  let reaction: ReturnType<typeof reactionOf> | undefined;
+  const reactionMsg = allMessages?.find((msg) => {
+    if (parseWaMessage(msg).messageType !== "reaction") return false;
+    const r = reactionOf(msg);
+    if (r.messageId !== wa_id) return false;
+    reaction = r;
+    return true;
   });
 
   const isSendReactionMsg = reactionMsg && reactionMsg.messageBody.exchangeProcess === "send";
-  if (reactionMsg)
+  if (reactionMsg && reaction?.emoji)
     return {
-      emoji: isSendReactionMsg
-        ? !isInsta
-          ? (reactionMsg.messageBody.send as WaSendMessageBody).reaction!.emoji
-          : ((reactionMsg.messageBody.send as IgSendMessageBody).payload!.emoji ??
-            reactionEmojiMap((reactionMsg.messageBody.send as IgSendMessageBody).payload!.reaction))
-        : !isInsta
-          ? (reactionMsg.messageBody.receive as WaReceiveMessageBody).messages[0]!.reaction!.emoji
-          : ((reactionMsg.messageBody.receive as IgReceiveMessageBody).reaction!.emoji ??
-            reactionEmojiMap(
-              (reactionMsg.messageBody.receive as IgReceiveMessageBody).reaction!.reaction,
-            )),
+      emoji: reaction.emoji,
       from: isSendReactionMsg
         ? reactionMsg.sender?.name
         : (selectedContact.name ??
