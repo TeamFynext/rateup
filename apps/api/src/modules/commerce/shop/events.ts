@@ -10,6 +10,8 @@ import {
 } from "../../../workers/bullmq/queues/shop.queue.js";
 import type { OrderEventStatus } from "../../integrations/events/integrationEvent.types.js";
 import { notificationSetting, sendShopMessage, type ShopMessage } from "./notify.js";
+import { addressLines } from "./address.js";
+import { paramsFor, renderShopBody, type ShopParamValues } from "./messageCatalog.js";
 import { formatMoney } from "./money.js";
 import { customerReachable } from "./phoneVerify.service.js";
 import { toNumber } from "./pricing.js";
@@ -32,9 +34,6 @@ const INTEGRATION_STATUS: Partial<Record<ShopOrderEventType, OrderEventStatus>> 
   refunded: "refunded",
 };
 
-/** Events that message the customer unless the store turned them off. Packed is off by default. */
-const DEFAULT_OFF = new Set<ShopNotificationEvent>(["packed"]);
-
 type LoadedOrder = NonNullable<Awaited<ReturnType<typeof loadOrder>>>;
 
 function loadOrder(orderId: string) {
@@ -52,92 +51,99 @@ function loadOrder(orderId: string) {
 const money = (o: LoadedOrder, n: unknown) => formatMoney(toNumber(n as number), o.currency);
 const first = (name: string | null) => (name ? name.split(" ")[0] : "there");
 
-/** What the customer is told for each event. Null means nothing is sent. */
-export function customerMessage(o: LoadedOrder, type: ShopOrderEventType): ShopMessage | null {
-  const n = `#${o.number}`;
-  const tracking = o.shipments[0]?.trackingUrl ?? null;
-  const params = [first(o.customerName), n, money(o, o.total)];
-  switch (type) {
-    case "placed": {
-      if (o.paymentStatus === "COD_PENDING" && o.store.codConfirm) {
-        const buttons = [
-          { id: `shop_cod_confirm:${o.id}`, title: "Confirm order" },
-          { id: `shop_cod_cancel:${o.id}`, title: "Cancel" },
-        ];
-        const pct = toNumber(o.store.codPrepaidDiscountPct);
-        if (pct > 0)
-          buttons.splice(1, 0, { id: `shop_cod_prepay:${o.id}`, title: `Pay online, ${pct}% off` });
-        return {
-          text: `Hi ${first(o.customerName)}, please confirm your cash on delivery order ${n} for ${money(o, o.total)}. We'll pack it as soon as you confirm.`,
-          buttons,
-          templateParams: params,
-        };
-      }
-      if (o.paymentStatus === "COD_PENDING") {
-        return {
-          text: `Order ${n} is confirmed. Please keep ${money(o, o.total)} ready for the delivery.`,
-          templateParams: params,
-        };
-      }
-      if (o.paymentMethod === "bank") {
-        const bank = (o.store.bankDetails ?? {}) as Record<string, string | undefined>;
-        const lines = [
-          bank.accountName && `Account name: ${bank.accountName}`,
-          bank.accountNumber && `Account number: ${bank.accountNumber}`,
-          bank.bankName && `Bank: ${bank.bankName}`,
-          bank.routingCode && `Routing / sort code: ${bank.routingCode}`,
-        ].filter(Boolean);
-        return {
-          text: `Order ${n} is reserved. Please transfer ${money(o, o.total)} to:\n${lines.join("\n")}\n\nUse ${n} as the reference.${bank.instructions ? `\n${bank.instructions}` : ""}`,
-          templateParams: params,
-        };
-      }
-      return null;
+/**
+ * Which catalog message an order event becomes, or null when it sends nothing. A placed
+ * order is told different things depending on how it is being paid.
+ */
+export function messageKeyFor(
+  o: LoadedOrder,
+  type: ShopOrderEventType,
+): ShopNotificationEvent | null {
+  if (type !== "placed") return type;
+  if (o.paymentStatus === "COD_PENDING") return o.store.codConfirm ? "cod_confirm" : "placed";
+  if (o.paymentMethod === "bank") return "bank_transfer";
+  return null;
+}
+
+function bankLines(o: LoadedOrder) {
+  const bank = (o.store.bankDetails ?? {}) as Record<string, string | undefined>;
+  const details = [
+    bank.accountName && `Account name: ${bank.accountName}`,
+    bank.accountNumber && `Account number: ${bank.accountNumber}`,
+    bank.bankName && `Bank: ${bank.bankName}`,
+    bank.routingCode && `Routing / sort code: ${bank.routingCode}`,
+  ].filter(Boolean);
+  return { details: details.join("\n"), instructions: bank.instructions ?? "" };
+}
+
+/** The named values an order's messages draw on, before the catalog orders them. */
+function orderValues(o: LoadedOrder, key: ShopNotificationEvent): ShopParamValues {
+  const shipment = o.shipments[0];
+  const bank = key === "bank_transfer" ? bankLines(o) : null;
+  return {
+    name: first(o.customerName),
+    orderNumber: `#${o.number}`,
+    total: money(o, o.total),
+    trackingUrl: shipment?.trackingUrl ?? "",
+    carrier: shipment?.carrier ?? "",
+    cancelReason: o.cancelReason ?? "",
+    bankDetails: bank?.details,
+    bankInstructions: bank?.instructions,
+    storeName: o.store.name,
+    orderLink: o.checkoutToken ? checkoutUrl(o.checkoutToken) : "",
+    items: o.items
+      .map((i) => `${i.quantity} × ${i.title}${i.variantTitle ? ` (${i.variantTitle})` : ""}`)
+      .join(", "),
+    deliveryAddress: addressLines(o.shippingAddress).join(", "),
+  };
+}
+
+/** The buttons and links a message carries besides its words. */
+function messageExtras(o: LoadedOrder, key: ShopNotificationEvent): Partial<ShopMessage> {
+  switch (key) {
+    case "cod_confirm": {
+      const buttons = [
+        { id: `shop_cod_confirm:${o.id}`, title: "Confirm order" },
+        { id: `shop_cod_cancel:${o.id}`, title: "Cancel" },
+      ];
+      const pct = toNumber(o.store.codPrepaidDiscountPct);
+      if (pct > 0)
+        buttons.splice(1, 0, { id: `shop_cod_prepay:${o.id}`, title: `Pay online, ${pct}% off` });
+      return { buttons };
     }
     case "paid":
-      return {
-        text: `Payment received — thank you! Order ${n} is confirmed and we'll let you know when it ships.`,
-        cta: o.checkoutToken
-          ? { label: "View order", url: checkoutUrl(o.checkoutToken) }
-          : undefined,
-        templateParams: params,
-      };
-    case "cod_confirmed":
-      return {
-        text: `Thanks! Order ${n} is confirmed. We'll message you when it ships.`,
-        templateParams: params,
-      };
-    case "packed":
-      return { text: `Order ${n} is packed and will ship soon.`, templateParams: params };
-    case "shipped":
-      return {
-        text: `Your order ${n} is on its way.${o.shipments[0]?.carrier ? ` Carrier: ${o.shipments[0].carrier}.` : ""}`,
-        cta: tracking ? { label: "Track parcel", url: tracking } : undefined,
-        templateParams: [...params, tracking ?? ""],
-      };
-    case "out_for_delivery":
-      return { text: `Order ${n} is out for delivery today.`, templateParams: params };
-    case "delivered":
-      return {
-        text: `Order ${n} has been delivered. We hope you love it!`,
-        templateParams: params,
-      };
-    case "delivery_failed":
-      return {
-        text: `We couldn't deliver order ${n}. Reply here with a good time or address and we'll arrange it.`,
-        templateParams: params,
-      };
-    case "cancelled":
-      return {
-        text: `Order ${n} has been cancelled.${o.cancelReason ? ` Reason: ${o.cancelReason}.` : ""}`,
-        templateParams: params,
-      };
-    case "refunded":
-      return {
-        text: `We've refunded order ${n}. It can take a few days to show on your statement.`,
-        templateParams: params,
-      };
+      return o.checkoutToken
+        ? { cta: { label: "View order", url: checkoutUrl(o.checkoutToken) } }
+        : {};
+    case "shipped": {
+      const tracking = o.shipments[0]?.trackingUrl;
+      return tracking ? { cta: { label: "Track parcel", url: tracking } } : {};
+    }
+    default:
+      return {};
   }
+}
+
+/**
+ * What the customer is told for an event: the store's words for that message, or the
+ * catalog's. Null means the event sends nothing.
+ */
+export function customerMessage(
+  o: LoadedOrder,
+  type: ShopOrderEventType,
+): { key: ShopNotificationEvent; message: ShopMessage } | null {
+  const key = messageKeyFor(o, type);
+  if (!key) return null;
+  const params = paramsFor(key, orderValues(o, key));
+  const { body } = notificationSetting(o.store.notifications, key);
+  return {
+    key,
+    message: {
+      text: renderShopBody(body, params),
+      templateParams: params,
+      ...messageExtras(o, key),
+    },
+  };
 }
 
 function platformOf(channel: LoadedOrder["channel"]) {
@@ -157,14 +163,11 @@ export async function notifyCustomer(o: LoadedOrder, type: ShopOrderEventType) {
     });
     return;
   }
-  const event = type === "cod_confirmed" ? "paid" : (type as ShopNotificationEvent);
-  const setting = notificationSetting(o.store.notifications, event);
-  const enabled =
-    (o.store.notifications as Record<string, { enabled?: boolean }> | null)?.[event]?.enabled ??
-    !DEFAULT_OFF.has(event);
-  if (!enabled) return;
-  const message = customerMessage(o, type);
-  if (!message) return;
+  const built = customerMessage(o, type);
+  if (!built) return;
+  const { key, message } = built;
+  const setting = notificationSetting(o.store.notifications, key);
+  if (!setting.enabled) return;
   const outcome = await sendShopMessage(
     {
       orgId: o.orgId,
@@ -174,7 +177,7 @@ export async function notifyCustomer(o: LoadedOrder, type: ShopOrderEventType) {
       phone: o.customerPhone,
     },
     message,
-    setting.waTemplateId,
+    setting.template,
   );
   if (!outcome.sent) {
     const why = {

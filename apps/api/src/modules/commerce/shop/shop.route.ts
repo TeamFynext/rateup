@@ -81,6 +81,8 @@ import {
   shippingRateSchema,
   staffNoteSchema,
   stockSchema,
+  shopMessageParams,
+  shopMessageSaveSchema,
   storeUpdateSchema,
   webhookSecretSchema,
 } from "./shop.schema.js";
@@ -121,6 +123,7 @@ import {
   updateStore,
   upsertShippingRate,
 } from "./store.service.js";
+import { listShopMessages, saveShopMessage } from "./shopMessages.service.js";
 
 type Req<P = unknown, B = unknown, Q = unknown> = FastifyRequest<{
   Params: P;
@@ -223,6 +226,29 @@ export async function shopRoutes(server: FastifyInstance) {
     }),
   );
 
+  server.get(
+    "/store/messages",
+    h(async (request) => listShopMessages(await store(request))),
+  );
+  server.put(
+    "/store/messages/:key",
+    {
+      schema: { params: shopMessageParams, body: shopMessageSaveSchema },
+      config: { permission: ["commerce.payments.manage", "commerce.storefront.manage"] },
+    },
+    h(
+      async (
+        request: Req<z.infer<typeof shopMessageParams>, z.infer<typeof shopMessageSaveSchema>>,
+      ) =>
+        saveShopMessage({
+          store: await store(request),
+          key: request.params.key,
+          body: request.body.body,
+          enabled: request.body.enabled,
+          makeTemplate: request.body.makeTemplate,
+        }),
+    ),
+  );
   server.post(
     "/store/stop-sync",
     payments,

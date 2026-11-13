@@ -78,6 +78,8 @@ export type ShopNotificationEvent =
   | "placed"
   | "paid"
   | "cod_confirm"
+  | "bank_transfer"
+  | "cod_confirmed"
   | "packed"
   | "shipped"
   | "out_for_delivery"
@@ -180,7 +182,10 @@ export interface ShopStore {
   cartReminderMinutes: number[];
   cartReminderDiscountId: string | null;
   notifications: Partial<
-    Record<ShopNotificationEvent, { enabled?: boolean; waTemplateId?: string | null }>
+    Record<
+      ShopNotificationEvent,
+      { enabled?: boolean; waTemplateId?: string | null; body?: string | null }
+    >
   > | null;
   lowStockThreshold: number;
   invoiceAutoSend: boolean;
@@ -693,6 +698,65 @@ const patch = async <T>(url: string, body?: unknown) =>
 const del = async <T>(url: string) => (await axiosClient.delete<T>(url)).data;
 
 export const getShopStore = () => get<ShopStore>(`${BASE}/store`);
+
+/** A named value a shop message can carry; the API's `messageCatalog.ts` keeps the order. */
+export type ShopMessageParam =
+  | "name"
+  | "orderNumber"
+  | "total"
+  | "trackingUrl"
+  | "carrier"
+  | "cancelReason"
+  | "bankDetails"
+  | "bankInstructions"
+  | "storeName"
+  | "productName"
+  | "itemCount"
+  | "discountCode"
+  | "orderLink"
+  | "payLink"
+  | "checkoutLink"
+  | "items"
+  | "deliveryAddress";
+
+export type ShopMessageTemplateStatus = "pending" | "approved" | "rejected" | "draft";
+
+/** One automatic message: its words, its switch, and where its WhatsApp template stands. */
+export interface ShopMessage {
+  key: ShopNotificationEvent;
+  baseTemplateName: string;
+  /** What `{{1}}`, `{{2}}` … stand for, in order. */
+  params: ShopMessageParam[];
+  defaultBody: string;
+  defaultOn: boolean;
+  quickReplies: string[];
+  enabled: boolean;
+  body: string;
+  customBody: boolean;
+  waTemplateId: string | null;
+  templateStatus: ShopMessageTemplateStatus | null;
+  templateName: string | null;
+  /** `own`: made from the store's words; `picked`: chosen from the template library. */
+  templateKind: "own" | "picked" | null;
+  /** The template's text: what a customer outside the 24-hour window reads. */
+  templateBody: string | null;
+  templateQuickReplies: string[];
+  /** Made from words the store has changed since. */
+  templateOutdated: boolean;
+}
+
+export interface SaveShopMessageResult {
+  message: ShopMessage;
+  template: { templateId: string; templateName: string; status: ShopMessageTemplateStatus } | null;
+  /** Why no template carries the words; the words were saved regardless. */
+  templateError: string | null;
+}
+
+export const getShopMessages = () => get<ShopMessage[]>(`${BASE}/store/messages`);
+export const saveShopMessage = (
+  key: ShopNotificationEvent,
+  data: { body: string | null; enabled?: boolean; makeTemplate?: boolean },
+) => put<SaveShopMessageResult>(`${BASE}/store/messages/${key}`, data);
 export const updateShopStore = (data: ShopStoreUpdate) => patch<ShopStore>(`${BASE}/store`, data);
 export const createShippingRate = (data: ShopShippingRateInput) =>
   post<ShopShippingRate>(`${BASE}/shipping-rates`, data);

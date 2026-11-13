@@ -30,7 +30,7 @@ vi.mock("./orders.service.js", () => orders);
 vi.mock("./checkout.service.js", () => ({ continueChatCheckout: vi.fn() }));
 vi.mock("./attribution.js", () => ({ chatAttribution: vi.fn() }));
 const notify = vi.hoisted(() => ({
-  notificationSetting: vi.fn(() => ({ waTemplateId: null })),
+  notificationSetting: vi.fn(() => ({ waTemplateId: null, body: "{{1}} is back" })),
   sendShopMessage: vi.fn(async () => ({ sent: true })),
 }));
 vi.mock("./notify.js", () => notify);

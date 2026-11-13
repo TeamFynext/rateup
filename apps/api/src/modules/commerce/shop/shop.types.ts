@@ -73,6 +73,8 @@ export type ShopNotificationEvent =
   | "placed"
   | "paid"
   | "cod_confirm"
+  | "bank_transfer"
+  | "cod_confirmed"
   | "packed"
   | "shipped"
   | "out_for_delivery"
@@ -86,5 +88,19 @@ export type ShopNotificationEvent =
   | "review_request";
 
 export type ShopNotificationSettings = Partial<
-  Record<ShopNotificationEvent, { enabled?: boolean; waTemplateId?: string | null }>
+  Record<
+    ShopNotificationEvent,
+    {
+      enabled?: boolean;
+      waTemplateId?: string | null;
+      /** The store's own words, `{{n}}` in `messageCatalog.ts` order; null for the default. */
+      body?: string | null;
+      /**
+       * Written by the server when it submits the message's own template: which catalog
+       * variable each template variable stands for. Read only while `waTemplateId` still
+       * points at that template.
+       */
+      templateMap?: { waTemplateId: string; params: number[] } | null;
+    }
+  >
 >;

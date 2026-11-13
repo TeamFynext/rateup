@@ -1008,10 +1008,15 @@ async function whatsappMessageHandler(
   }
 
   // ── Shop checkout replies (ids "shop_…"): intercept before other handlers ─────
-  if (parsedMessage?.buttonId?.startsWith("shop_")) {
+  // An interactive button arrives as `buttonId`; a template's quick reply (an order update
+  // sent outside the 24-hour window) as `buttonPayload`.
+  const shopReplyId = [parsedMessage?.buttonId, parsedMessage?.buttonPayload].find((id) =>
+    id?.startsWith("shop_"),
+  );
+  if (shopReplyId) {
     try {
       const { handleShopReply } = await import("../../../commerce/shop/checkout.service.js");
-      const handled = await handleShopReply(parsedMessage.buttonId, {
+      const handled = await handleShopReply(shopReplyId, {
         orgId,
         contactId: messageObj?.contactId ?? null,
         channel: "WHATSAPP",

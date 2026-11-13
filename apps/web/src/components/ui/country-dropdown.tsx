@@ -1,5 +1,5 @@
 // assets
-import { IconCheck, IconGlobe } from "@tabler/icons-react";
+import { IconCheck, IconGlobe, IconSearch } from "@tabler/icons-react";
 // data
 import { countries } from "country-data-list";
 import React, { forwardRef, useCallback, useEffect, useState } from "react";
@@ -121,10 +121,15 @@ const CountryDropdownComponent = (
       </ComboboxTrigger>
       <ComboboxContent className="p-0">
         <div className="flex flex-col w-full max-h-[250px] sm:max-h-[330px]">
-          <ComboboxChipsInput
-            placeholder="Search country..."
-            className="w-full border-0 border-b rounded-none px-3 h-9 flex-shrink-0"
-          />
+          {/* 16px text: anything smaller makes iPhones zoom the page when the box is tapped. */}
+          <label className="flex h-11 shrink-0 items-center gap-2 border-b border-border px-3 text-muted-foreground">
+            <IconSearch size={18} className="shrink-0" aria-hidden />
+            <ComboboxChipsInput
+              placeholder="Search country..."
+              aria-label="Search country"
+              className="h-full w-full bg-transparent text-base text-foreground placeholder:text-muted-foreground sm:text-sm"
+            />
+          </label>
           <ComboboxEmpty>No country found.</ComboboxEmpty>
           <ComboboxList className="flex-1 overflow-y-auto">
             {(item: { value: string; label: string }) => {

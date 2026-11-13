@@ -1,6 +1,7 @@
 import { keepPreviousData, useQuery, useQueryClient } from "@tanstack/react-query";
 
 import {
+  getShopMessages,
   getShopCollections,
   getShopDiscounts,
   getShopOrder,
@@ -36,7 +37,11 @@ export const shopKeys = {
   discounts: () => ["shop", "discounts"] as const,
   payments: () => ["shop", "payments"] as const,
   shippingProviders: () => ["shop", "shipping-providers"] as const,
+  messages: () => ["shop", "messages"] as const,
 };
+
+export const useShopMessages = () =>
+  useQuery({ queryKey: shopKeys.messages(), queryFn: getShopMessages });
 
 export const useShopStore = () => useQuery({ queryKey: shopKeys.store(), queryFn: getShopStore });
 
